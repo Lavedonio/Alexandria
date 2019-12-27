@@ -237,6 +237,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Log files
+*.log
+
 ### SublimeText ###
 # Cache files for Sublime Text
 *.tmlanguage.cache
