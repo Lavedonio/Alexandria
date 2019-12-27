@@ -23,6 +23,8 @@ class RedShiftTool(object):
     so the base code becomes more readable and straightforward."""
     
     def __init__(self, connect_file, connect_by_cluster=True):
+        # Code structure based on StackOverFlow answer
+        # https://stackoverflow.com/questions/44243169/connect-to-redshift-using-python-using-iam-role
 
         # Getting credential files path
         try:
@@ -104,19 +106,25 @@ class RedShiftTool(object):
         except psycopg2.Error:
             logger.exception("Error running command!")
 
-    def query(self, sql_query):
+    def query(self, sql_query, fetch_through_pandas=True):
         """Run a query and return the results"""
 
-        try:
-            self.cursor.execute(sql_query)
-            logger.debug(f"Query Executed: {sql_query}")
+        if fetch_through_pandas:
+            result = pd.read_sql_query(sql_query, self.connection)
 
-            return self.cursor.fetchall()
+        else:
+            try:
+                self.cursor.execute(sql_query)
+                logger.debug(f"Query Executed: {sql_query}")
 
-        except psycopg2.Error:
-            logger.exception("Error running query!")
+                result = self.cursor.fetchall()
 
-            return None
+            except psycopg2.Error:
+                logger.exception("Error running query!")
+
+                result = None
+
+        return result
 
     def close_connection(self):
         """Closes Connection with RedShift database"""
@@ -130,14 +138,14 @@ def test():
     
     sql_test_query = """SELECT * FROM atomic.Events LIMIT 10"""
 
-    table = snowplow_revelo.query("""SELECT * FROM atomic.Events LIMIT 10""")
+    table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)
     print("Query Result by fetchall command:")
     print(table)
 
     print("")
 
     print("Query Result by pandas:")
-    df = pd.read_sql_query(sql_test_query, snowplow_revelo.connection)
+    df = snowplow_revelo.query(sql_test_query)
     print(df)
 
     snowplow_revelo.close_connection()
