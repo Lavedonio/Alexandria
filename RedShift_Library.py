@@ -12,7 +12,9 @@ logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
-file_handler = logging.FileHandler("RedShift_Library.log")
+LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+file_handler = logging.FileHandler(os.path.join(LOG_DIR, "RedShift_Library.log"))
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
@@ -22,7 +24,7 @@ class RedShiftTool(object):
     """This class handle most of the interaction needed with RedShift,
     so the base code becomes more readable and straightforward."""
     
-    def __init__(self, connect_file, connect_by_cluster=True, fail_silently=False):
+    def __init__(self, connect_file, aws_keys, connect_by_cluster=True, fail_silently=False):
         # Code structure based on StackOverFlow answer
         # https://stackoverflow.com/questions/44243169/connect-to-redshift-using-python-using-iam-role
 
@@ -35,6 +37,16 @@ class RedShiftTool(object):
             logger.warning("Environment Not Variable found")
         finally:
             connect_file = os.path.join(credentials_path, connect_file)
+            aws_keys = os.path.join(credentials_path, aws_keys)
+
+        # Get AWS credentials in CSV format
+        with open(aws_keys) as akf:
+            akf_lines = akf.readlines()
+
+        keys = akf_lines[1]
+        if keys[-1] == "\n":
+            keys = keys[:-1]
+        access_key, secret_key = keys.split(",")
 
         logger.debug(f"connect_by_cluster = {connect_by_cluster}")
         if connect_by_cluster:
@@ -65,6 +77,8 @@ class RedShiftTool(object):
         self.port = config["port"]
         self.cluster_creds = cluster_creds
         self.connect_by_cluster = connect_by_cluster
+        self.access_key = access_key
+        self.secret_key = secret_key
 
         self.connection = self.connect(fail_silently)
         self.cursor = self.connection.cursor()
@@ -101,6 +115,10 @@ class RedShiftTool(object):
                 raise e
             else:
                 logger.error("ATENTION: Failing Silently")
+
+    def commit(self):
+        """Commit a transaction."""
+        self.connection.commit()
 
     def execute_sql(self, command, fail_silently=False):
         """Execute a SQL command (CREATE, UPDATE and DROP).
@@ -157,22 +175,22 @@ class RedShiftTool(object):
 
         return result
 
-    # def unload_to_S3(self, redshift_query, s3_bucket_path, filename):
-    #     unload_query = """
-    #         UNLOAD ('{redshift_query}')
-    #         TO 's3://{s3_bucket}/{s3_key}/{table}_'
-    #         with credentials
-    #         'aws_access_key_id={access_key};aws_secret_access_key={secret_key}'
-    #         {unload_options};
-    #         """.format(redshift_query=redshift_query,
-    #                    table=self.table,
-    #                    s3_bucket=self.s3_bucket,
-    #                    s3_key=self.s3_key,
-    #                    access_key=credentials.access_key,
-    #                    secret_key=credentials.secret_key,
-    #                    unload_options=unload_options)
+    def unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'"):
 
-    #     self.execute_sql(unload_query)
+        if s3_path.endswith("/"):
+            s3_path = s3_path[:-1]
+
+        unload_query = f"""
+            UNLOAD ('{redshift_query}')
+            TO '{s3_path}/{filename}_'
+            with credentials
+            'aws_access_key_id={self.access_key};aws_secret_access_key={self.secret_key}'
+            {unload_options};
+            """
+
+        print(unload_query)
+        self.execute_sql(unload_query)
+        # self.commit()
 
     def close_connection(self):
         """Closes Connection with RedShift database"""
@@ -182,9 +200,12 @@ class RedShiftTool(object):
 
 
 def test():
-    snowplow_revelo = RedShiftTool(connect_file="redshift_IAM.json")
+    snowplow_revelo = RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv")
     
     sql_test_query = """SELECT * FROM atomic.Events LIMIT 10"""
+
+    timestamp = '2019-11-29 19:31:42.766000+00:00'
+    extraction_query = """SELECT * FROM atomic.Events WHERE etl_tstamp = ''{timestamp}''""".format(timestamp=timestamp)
 
     table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)
     print("Query Result by fetchall command:")
@@ -195,6 +216,12 @@ def test():
     print("Query Result by pandas:")
     df = snowplow_revelo.query(sql_test_query, fail_silently=False)
     print(df)
+
+    s3_path = "s3://alexandria/"
+
+    filename = "fausto"
+
+    snowplow_revelo.unload_to_S3(extraction_query, s3_path, filename)
 
     snowplow_revelo.close_connection()
 
