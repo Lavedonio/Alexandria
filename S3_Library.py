@@ -11,7 +11,9 @@ logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
-file_handler = logging.FileHandler("S3_Library.log")
+LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+file_handler = logging.FileHandler(os.path.join(LOG_DIR, "S3_Library.log"))
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
@@ -100,6 +102,9 @@ class S3Tool(object):
 
     def set_by_path(self, s3_path):
         self.bucket_name, self.subfolder = parse_s3_path(s3_path)
+
+    def get_s3_path(self):
+        return f"s3://{self.bucket_name}/{self.subfolder}"
 
     def list_all_buckets(self):
         """Returns a list of all Buckets in S3"""
