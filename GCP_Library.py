@@ -11,7 +11,9 @@ logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
-file_handler = logging.FileHandler("GCP_Library.log")
+LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+file_handler = logging.FileHandler(os.path.join(LOG_DIR, "GCP_Library.log"))
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
@@ -24,6 +26,7 @@ class GCPTool(object):
     def __init__(self, connect_file, init_list=[]):
         # Code created following Google official API documentation:
         # https://cloud.google.com/bigquery/docs/reference/libraries
+        # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries?hl=pt-br#bigquery_simple_app_query-python
 
         # Checking if no client is instantiated
         if len(init_list) == 0:
@@ -75,14 +78,53 @@ class GCPTool(object):
 
         return result
 
+    def upload(self, dataframe, dataset, table, if_exists='fail'):
+        """Executes an insert SQL command into BigQuery
+
+        if_exists can take 3 different arguments:
+            'fail': If table exists, raises error.
+            'replace': If table exists, drop it, recreate it, and insert data.
+            'append': If table exists, insert data. Create if does not exist.
+
+        Full documentation for Pandas export to BigQUery can be found here:
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
+        """
+
+        destination = dataset + "." + table
+        dataframe.to_gbq(destination, chunksize=None, if_exists=if_exists)
+
 
 def test():
     bq = GCPTool(connect_file="revelo-hebe-29868b4d02e4.json", init_list=["bigquery"])
 
     sql_test_query = """SELECT MAX(etl_tstamp) FROM `revelo-hebe.source_fausto.atomic_events`"""
 
-    df = bq.query(sql_test_query)
+    sql_query = """
+    SELECT
+      users.id,
+      users.email,
+      users.company_id,
+      ga_signup.datehour,
+      -- ga_signup.dimension4,
+      ga_signup.source,
+      ga_signup.medium,
+      ga_signup.campaign,
+      ga_signup.keyword,
+      ga_signup.adcontent,
+      ga_signup.goal9completions
+    FROM
+      `revelo-hebe.source_revelo_internal.users` users
+      RIGHT JOIN `revelo-hebe.source_ga_signup_company_id.report` ga_signup ON CAST(users.id AS STRING) = ga_signup.dimension4
+    WHERE
+      users.employer = true"""
+
+    df = bq.query(sql_query)
     print(df)
+
+    dataset = "company"
+    table = "signup"
+
+    bq.upload(df, dataset, table)
 
 
 if __name__ == '__main__':
