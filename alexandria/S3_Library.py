@@ -1,8 +1,6 @@
 import os
-import json
 import logging
 import boto3
-import pandas as pd
 
 
 # Logging Configuration
@@ -11,7 +9,7 @@ logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
-LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logs')
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 file_handler = logging.FileHandler(os.path.join(LOG_DIR, "S3_Library.log"))
 file_handler.setFormatter(formatter)
@@ -126,17 +124,17 @@ class S3Tool(object):
             def list_bucket_contents_as_generator(self):
                 if self.subfolder == "":
                     logger.debug("No subfolder, yielding all files in bucket")
-                    
+
                     for file in self.bucket.objects.all():
                         yield file.key
-                
+
                 else:
                     logger.debug(f"subfolder '{self.subfolder}' found, yielding all matching files in bucket")
 
                     for file in self.bucket.objects.filter(Prefix=self.subfolder, Delimiter="/"):
                         if file.key != self.subfolder:
                             yield file.key
-            
+
             return list_bucket_contents_as_generator(self)
 
         else:
@@ -149,21 +147,21 @@ class S3Tool(object):
 
                 for file in self.bucket.objects.all():
                     contents.append(file.key)
-            
+
             else:
                 logger.debug(f"subfolder '{self.subfolder}' found, listing all matching files in bucket")
 
                 for file in self.bucket.objects.filter(Prefix=self.subfolder, Delimiter="/"):
                     contents.append(file.key)
-                
+
                 if self.subfolder in contents:
                     contents.remove(self.subfolder)
-            
+
             return contents
 
     def upload(self, filename, remote_path=None):
         """Uploads file to remote path in S3.
-        
+
         remote_path can take either a full S3 path or a subfolder only one.
 
         If the remote_path parameter is not set, it will default to whatever subfolder
@@ -212,7 +210,7 @@ class S3Tool(object):
     #         def list_all_bucket_contents_as_generator(bucket):
     #             """Generate all the keys in an S3 bucket."""
     #             kwargs = {'Bucket': bucket}
-                
+
     #             while True:
     #                 resp = self.client.list_objects_v2(**kwargs)
     #                 for obj in resp['Contents']:
@@ -224,7 +222,7 @@ class S3Tool(object):
     #                     break
 
     #         return list_all_bucket_contents_as_generator(bucket)
-        
+
     #     else:
     #         print("Not Yield")
     #         keys = []

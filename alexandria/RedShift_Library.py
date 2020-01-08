@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
-LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logs')
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 file_handler = logging.FileHandler(os.path.join(LOG_DIR, "RedShift_Library.log"))
 file_handler.setFormatter(formatter)
@@ -23,7 +23,7 @@ logger.addHandler(file_handler)
 class RedShiftTool(object):
     """This class handle most of the interaction needed with RedShift,
     so the base code becomes more readable and straightforward."""
-    
+
     def __init__(self, connect_file, aws_keys, connect_by_cluster=True, fail_silently=False):
         # Code structure based on StackOverFlow answer
         # https://stackoverflow.com/questions/44243169/connect-to-redshift-using-python-using-iam-role
@@ -60,9 +60,9 @@ class RedShiftTool(object):
 
             logger.debug("Getting cluster credentials...")
             cluster_creds = client.get_cluster_credentials(DbUser=config["user"],
-                                                            DbName=config["dbname"],
-                                                            ClusterIdentifier=config["cluster_id"],
-                                                            AutoCreate=False)
+                                                           DbName=config["dbname"],
+                                                           ClusterIdentifier=config["cluster_id"],
+                                                           AutoCreate=False)
             logger.debug("Cluster credentials responded.")
 
         else:
@@ -106,11 +106,11 @@ class RedShiftTool(object):
             )
             logger.info("Connected!")
             return conn
-        
+
         except psycopg2.Error as e:
             print('Failed to open database connection.')
             logger.exception('Failed to open database connection.')
-            
+
             if not fail_silently:
                 raise e
             else:
@@ -127,10 +127,10 @@ class RedShiftTool(object):
         try:
             self.cursor.execute(command)
             logger.debug(f"Command Executed: {command}")
-        
+
         except psycopg2.Error as e:
             logger.exception("Error running command!")
-            
+
             if not fail_silently:
                 raise e
             else:
@@ -194,14 +194,14 @@ class RedShiftTool(object):
 
     def close_connection(self):
         """Closes Connection with RedShift database"""
-        
+
         self.connection.close()
         logger.info("Connection closed.")
 
 
 def test():
     snowplow_revelo = RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv")
-    
+
     sql_test_query = """SELECT * FROM atomic.Events LIMIT 10"""
 
     timestamp = '2019-11-29 19:31:42.766000+00:00'

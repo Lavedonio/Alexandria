@@ -1,7 +1,5 @@
 import os
-import json
 import logging
-import pandas as pd
 from google.cloud import bigquery
 
 
@@ -11,7 +9,7 @@ logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
-LOG_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logs')
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 file_handler = logging.FileHandler(os.path.join(LOG_DIR, "GCP_Library.log"))
 file_handler.setFormatter(formatter)
@@ -22,7 +20,7 @@ logger.addHandler(file_handler)
 class GCPTool(object):
     """This class handle most of the interaction needed with Google Cloud Platform,
     so the base code becomes more readable and straightforward."""
-    
+
     def __init__(self, connect_file, init_list=[]):
         # Code created following Google official API documentation:
         # https://cloud.google.com/bigquery/docs/reference/libraries
@@ -48,11 +46,11 @@ class GCPTool(object):
 
         if "bigquery" in init_list:
             logger.debug("Initiating BigQuery Client")
-            
+
             try:
                 bq_client = bigquery.Client()
                 logger.debug("Connected.")
-            
+
             except Exception as e:
                 logger.exception("Error connecting with BigQuery!")
                 raise e
