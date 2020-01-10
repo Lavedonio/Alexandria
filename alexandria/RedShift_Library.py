@@ -198,11 +198,7 @@ class RedShiftTool(object):
             {unload_options};
         """
 
-        logger.debug("Unload Query:")
-        logger.debug(unload_query)
-
-        print("Unload Query")
-        print(unload_query)
+        logger.debug("Unloading Query...")
         self.execute_sql(unload_query)
 
     def close_connection(self):
