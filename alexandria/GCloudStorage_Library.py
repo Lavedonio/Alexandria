@@ -187,47 +187,44 @@ class GCloudStorageTool(object):
 
         blob.upload_from_filename(filename)
 
-    def download(self, remote_path, filename=None):
+    def download_file(self, remote_path, filename=None):
         # Method still in development
         raise NotImplementedError
 
 
 def test():
-    google_cloud_storage = GCloudStorageTool(connect_file="revelo-hebe-29868b4d02e4.json")
+    cloud_storage = GCloudStorageTool(connect_file="revelo-hebe-29868b4d02e4.json")
 
-    dataset = "company"
-    table = "signup"
-
-    google_cloud_storage.upload_file("df", dataset, table)
-
-    bucket_name = "alexandria-teste"
-    gs_path = "gs://snowplow-emretl-revelo/"
+    gs_path = "gs://revelo_app_etl/"
 
     cloud_storage = GCloudStorageTool(connect_file="revelo-hebe-29868b4d02e4.json", gs_path=gs_path)
-    gs_path = "s3://alexandria-teste/teste/"
+    gs_path = "gs://revelo_app_etl/revelo-app/"
     cloud_storage.set_by_path(gs_path)
 
-    # contents = s3.list_buckets()
+    buckets = cloud_storage.list_all_buckets()
+    print("Bucket list:")
+    for index, bucket in enumerate(buckets):
+        print(f"{index}: {bucket}")
 
     contents = cloud_storage.list_bucket_contents()
 
-    print("File list now:")
+    print("File list:")
     for index, content in enumerate(contents):
         print(f"{index}: {content}")
 
-    file = "C:\\Users\\USER\\Downloads\\teste.txt"
-    new_file = "teste.txt"
-    remote = "teste/teste.txt"
+    # file = "C:\\Users\\USER\\Downloads\\teste.txt"
+    # new_file = "teste.txt"
+    # remote = "teste/teste.txt"
 
-    cloud_storage.upload_file(file)
+    # cloud_storage.upload_file(file)
 
-    contents = cloud_storage.list_bucket_contents()
+    # contents = cloud_storage.list_bucket_contents()
 
-    print("\nUpdated file list:")
-    for index, content in enumerate(contents):
-        print(f"{index}: {content}")
+    # print("\nUpdated file list:")
+    # for index, content in enumerate(contents):
+    #     print(f"{index}: {content}")
 
-    cloud_storage.download_file(remote, new_file)
+    # cloud_storage.download_file(remote, new_file)
 
 
 if __name__ == '__main__':
