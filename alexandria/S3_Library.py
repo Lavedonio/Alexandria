@@ -159,7 +159,7 @@ class S3Tool(object):
 
             return contents
 
-    def upload(self, filename, remote_path=None):
+    def upload_file(self, filename, remote_path=None):
         """Uploads file to remote path in S3.
 
         remote_path can take either a full S3 path or a subfolder only one.
@@ -191,54 +191,49 @@ class S3Tool(object):
 
         self.bucket.upload_file(filename, remote_path)
 
-    def download(self, remote_path, filename=None):
-        # Method still in development
-        raise NotImplementedError
+    def download_file(self, remote_path, filename=None):
+        """Downloads remote S3 file to local path.
+
+        remote_path can take either a full S3 path or a subfolder only one.
+
+        If the filename parameter is not set, it will default to whatever subfolder
+        is set in instance of the class plus the file name that is being downloaded."""
 
         if filename is None:
-            filename = remote_path
+            filename = self.subfolder + os.path.basename(remote_path)
 
-        # self.s3.meta.client.download_file(self.bucket_name, remote_path, filename)
+        # Tries to parse as a S3 path. If it fails, ignores this part
+        # and doesn't change the value of remote_path parameter
+        try:
+            bucket, subfolder = parse_s3_path(remote_path)
+        except ValueError:
+            pass
+        else:
+            if bucket != self.bucket_name:
+                logger.warning("Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
+                print("WARNING: Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
 
+            # parse_s3_path() function adds a "/" after a subfolder.
+            # Since this is a file, the "/" must be removed.
+            remote_path = subfolder[:-1]
+
+        logger.debug(f"remote_path: {remote_path}")
+
+        path, filename = os.path.split(filename)
+        logger.debug(f"Path: {path}")
+        logger.debug(f"Filename: {filename}")
+
+        # If this filename exists in this directory (yes, the one where this code lays), aborts the download
+        if filename in next(os.walk(os.getcwd()))[2]:
+            logger.error("File already exists at {}. Clean the folder to continue.".format(os.path.join(os.getcwd(), filename)))
+            raise FileExistsError("File already exists at {}. Clean the folder to continue.".format(os.path.join(os.getcwd(), filename)))
+
+        # Downloads the file
         self.bucket.download_file(remote_path, filename)
 
-    # def list_all_bucket_contents(bucket, yield_results=True):
-    #     """Get a list of all keys in an S3 bucket.
-    #     https://alexwlchan.net/2017/07/listing-s3-keys/"""
-    #     if yield_results:
-    #         print("Yield")
-    #         def list_all_bucket_contents_as_generator(bucket):
-    #             """Generate all the keys in an S3 bucket."""
-    #             kwargs = {'Bucket': bucket}
-
-    #             while True:
-    #                 resp = self.client.list_objects_v2(**kwargs)
-    #                 for obj in resp['Contents']:
-    #                     yield obj['Key']
-
-    #                 try:
-    #                     kwargs['ContinuationToken'] = resp['NextContinuationToken']
-    #                 except KeyError:
-    #                     break
-
-    #         return list_all_bucket_contents_as_generator(bucket)
-
-    #     else:
-    #         print("Not Yield")
-    #         keys = []
-
-    #         kwargs = {'Bucket': bucket}
-    #         while True:
-    #             resp = self.client.list_objects_v2(**kwargs)
-    #             for obj in resp['Contents']:
-    #                 keys.append(obj['Key'])
-
-    #             try:
-    #                 kwargs['ContinuationToken'] = resp['NextContinuationToken']
-    #             except KeyError:
-    #                 break
-
-    #         return keys
+        # Move the downloaded file to specified directory
+        os.makedirs(path, exist_ok=True)
+        os.replace(filename, os.path.join(path, filename))
 
 
 def test():
@@ -246,7 +241,7 @@ def test():
     s3_path = "s3://snowplow-emretl-revelo/"
 
     s3 = S3Tool(s3_path=s3_path)
-    s3_path = "s3://alexandria-teste/teste/"
+    s3_path = "s3://revelo-redshift-data/teste_import/"
     s3.set_by_path(s3_path)
 
     # contents = s3.list_buckets()
@@ -258,8 +253,8 @@ def test():
         print(f"{index}: {content}")
 
     file = "C:\\Users\\USER\\Downloads\\teste.txt"
-    new_file = "teste.txt"
-    remote = "teste/teste.txt"
+    new_file = "C:\\Users\\USER\\Downloads\\teste\\teste.txt"
+    remote = s3_path + "teste.txt"
 
     s3.upload(file)
 
@@ -269,7 +264,7 @@ def test():
     for index, content in enumerate(contents):
         print(f"{index}: {content}")
 
-    # s3.download(remote, new_file)
+    s3.download_file(remote)
 
 
 if __name__ == '__main__':
