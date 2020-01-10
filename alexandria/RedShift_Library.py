@@ -24,7 +24,7 @@ class RedShiftTool(object):
     """This class handle most of the interaction needed with RedShift,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, connect_file, aws_keys, connect_by_cluster=True, fail_silently=False):
+    def __init__(self, connect_file, aws_keys, connect_by_cluster=True):
         # Code structure based on StackOverFlow answer
         # https://stackoverflow.com/questions/44243169/connect-to-redshift-using-python-using-iam-role
 
@@ -80,8 +80,9 @@ class RedShiftTool(object):
         self.access_key = access_key
         self.secret_key = secret_key
 
-        self.connection = self.connect(fail_silently)
-        self.cursor = self.connection.cursor()
+        # Attibutes ready to be set in connection
+        self.connection = None
+        self.cursor = None
 
     def connect(self, fail_silently=False):
         """Create the connection using the __init__ attributes.
@@ -105,7 +106,10 @@ class RedShiftTool(object):
                 database=self.dbname
             )
             logger.info("Connected!")
-            return conn
+
+            self.connection = conn
+            self.cursor = self.connection.cursor()
+            return self
 
         except psycopg2.Error as e:
             print('Failed to open database connection.')
@@ -117,8 +121,14 @@ class RedShiftTool(object):
                 logger.error("ATENTION: Failing Silently")
 
     def commit(self):
-        """Commit a transaction."""
+        """Commit any pending transaction to the database."""
         self.connection.commit()
+        logger.info("Transaction commited.")
+
+    def rollback(self):
+        """Roll back to the start of any pending transaction."""
+        self.connection.rollback()
+        logger.info("Roll back current transaction.")
 
     def execute_sql(self, command, fail_silently=False):
         """Execute a SQL command (CREATE, UPDATE and DROP).
@@ -181,49 +191,83 @@ class RedShiftTool(object):
             s3_path = s3_path[:-1]
 
         unload_query = f"""
-            UNLOAD ('{redshift_query}')
+            UNLOAD ($$ {redshift_query} $$)
             TO '{s3_path}/{filename}_'
-            with credentials
+            WITH CREDENTIALS
             'aws_access_key_id={self.access_key};aws_secret_access_key={self.secret_key}'
             {unload_options};
-            """
+        """
 
+        logger.debug("Unload Query:")
+        logger.debug(unload_query)
+
+        print("Unload Query")
         print(unload_query)
         self.execute_sql(unload_query)
-        # self.commit()
 
     def close_connection(self):
         """Closes Connection with RedShift database"""
-
         self.connection.close()
         logger.info("Connection closed.")
 
+    # __enter__ and __exit__ functions for with statement.
+    # With statement docs: https://docs.python.org/2.5/whatsnew/pep-343.html
+    def __enter__(self):
+        return self.connect()
 
-def test():
-    snowplow_revelo = RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv")
+    def __exit__(self, type, value, traceback):
+        if traceback is None:
+            # No exception, so commit
+            self.commit()
+        else:
+            # Exception occurred, so rollback.
+            self.rollback()
+            # return False
+
+        self.close_connection()
+
+
+def test(using_with_statement=True):
 
     sql_test_query = """SELECT * FROM atomic.Events LIMIT 10"""
 
     timestamp = '2019-11-29 19:31:42.766000+00:00'
-    extraction_query = """SELECT * FROM atomic.Events WHERE etl_tstamp = ''{timestamp}''""".format(timestamp=timestamp)
+    extraction_query = """SELECT * FROM atomic.Events WHERE etl_tstamp = '{timestamp}'""".format(timestamp=timestamp)
 
-    table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)
-    print("Query Result by fetchall command:")
-    print(table)
-
-    print("")
-
-    print("Query Result by pandas:")
-    df = snowplow_revelo.query(sql_test_query, fail_silently=False)
-    print(df)
-
-    s3_path = "s3://alexandria/"
-
+    s3_path = "s3://revelo-redshift-data/new/"
     filename = "fausto"
 
-    snowplow_revelo.unload_to_S3(extraction_query, s3_path, filename)
+    if using_with_statement:
+        with RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv") as snowplow_revelo:
+            table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)
+            print("Query Result by fetchall command:")
+            print(table)
 
-    snowplow_revelo.close_connection()
+            print("")
+
+            df = snowplow_revelo.query(sql_test_query, fail_silently=False)
+            print("Query Result by pandas:")
+            print(df)
+
+            snowplow_revelo.unload_to_S3(extraction_query, s3_path, filename)
+
+    else:
+        snowplow_revelo = RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv")
+        snowplow_revelo.connect()
+
+        table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)
+        print("Query Result by fetchall command:")
+        print(table)
+
+        print("")
+
+        df = snowplow_revelo.query(sql_test_query, fail_silently=False)
+        print("Query Result by pandas:")
+        print(df)
+
+        snowplow_revelo.unload_to_S3(extraction_query, s3_path, filename)
+
+        snowplow_revelo.close_connection()
 
 
 if __name__ == '__main__':
