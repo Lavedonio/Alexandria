@@ -1,9 +1,9 @@
 import os
-import json
 import logging
 import boto3
 import psycopg2
 import pandas as pd
+from General_Tools import fetch_credentials
 
 
 # Logging Configuration
@@ -24,61 +24,39 @@ class RedShiftTool(object):
     """This class handle most of the interaction needed with RedShift,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, connect_file, aws_keys, connect_by_cluster=True):
+    def __init__(self, connect_by_cluster=True):
         # Code structure based on StackOverFlow answer
         # https://stackoverflow.com/questions/44243169/connect-to-redshift-using-python-using-iam-role
 
-        # Getting credential files path
-        try:
-            credentials_path = os.environ["CREDENTIALS_HOME"]
-            logger.debug(f"Environment Variable found: {credentials_path}")
-        except KeyError:
-            credentials_path = ""
-            logger.warning("Environment Not Variable found")
-        finally:
-            connect_file = os.path.join(credentials_path, connect_file)
-            aws_keys = os.path.join(credentials_path, aws_keys)
+        # Getting credentials
+        connection_type = "cluster_credentials" if connect_by_cluster else "master_password"
+        logger.debug(f"connection_type = {connection_type}")
 
-        # Get AWS credentials in CSV format
-        with open(aws_keys) as akf:
-            akf_lines = akf.readlines()
+        redshift_creds = fetch_credentials(service_name="RedShift", connection_type=connection_type)
+        aws_creds = fetch_credentials("AWS")
 
-        keys = akf_lines[1]
-        if keys[-1] == "\n":
-            keys = keys[:-1]
-        access_key, secret_key = keys.split(",")
-
-        logger.debug(f"connect_by_cluster = {connect_by_cluster}")
+        # Getting cluster credentials
         if connect_by_cluster:
-
-            with open(connect_file) as cf:
-                config = json.load(cf)
-            logger.debug("Configuration file found and read!")
-
             client = boto3.client('redshift')
             logger.debug("Connected to RedShift by boto3")
 
             logger.debug("Getting cluster credentials...")
-            cluster_creds = client.get_cluster_credentials(DbUser=config["user"],
-                                                           DbName=config["dbname"],
-                                                           ClusterIdentifier=config["cluster_id"],
+            cluster_creds = client.get_cluster_credentials(DbUser=redshift_creds["user"],
+                                                           DbName=redshift_creds["dbname"],
+                                                           ClusterIdentifier=redshift_creds["cluster_id"],
                                                            AutoCreate=False)
             logger.debug("Cluster credentials responded.")
 
-        else:
-            with open(connect_file) as cf:
-                config = json.load(cf)
-
-        self.dbname = config["dbname"]
-        self.user = config["user"]
-        self.password = config.get("password")
-        self.cluster_id = config.get("cluster_id")
-        self.host = config["host"]
-        self.port = config["port"]
+        self.dbname = redshift_creds["dbname"]
+        self.user = redshift_creds["user"]
+        self.password = redshift_creds.get("password")
+        self.cluster_id = redshift_creds.get("cluster_id")
+        self.host = redshift_creds["host"]
+        self.port = redshift_creds["port"]
         self.cluster_creds = cluster_creds
         self.connect_by_cluster = connect_by_cluster
-        self.access_key = access_key
-        self.secret_key = secret_key
+        self.access_key = aws_creds["access_key"]
+        self.secret_key = aws_creds["secret_key"]
 
         # Attibutes ready to be set in connection
         self.connection = None
@@ -234,7 +212,7 @@ def test(using_with_statement=True):
     filename = "fausto"
 
     if using_with_statement:
-        with RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv") as snowplow_revelo:
+        with RedShiftTool() as snowplow_revelo:
             table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)
             print("Query Result by fetchall command:")
             print(table)
@@ -248,7 +226,7 @@ def test(using_with_statement=True):
             snowplow_revelo.unload_to_S3(extraction_query, s3_path, filename)
 
     else:
-        snowplow_revelo = RedShiftTool(connect_file="redshift_IAM.json", aws_keys="AWSaccessKeys.csv")
+        snowplow_revelo = RedShiftTool()
         snowplow_revelo.connect()
 
         table = snowplow_revelo.query(sql_test_query, fetch_through_pandas=False)

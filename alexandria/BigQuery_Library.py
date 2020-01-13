@@ -1,6 +1,7 @@
 import os
 import logging
 from google.cloud import bigquery
+from General_Tools import fetch_credentials
 
 
 # Logging Configuration
@@ -21,18 +22,15 @@ class BigQueryTool(object):
     """This class handle most of the interaction needed with BigQuery,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, connect_file):
+    def __init__(self):
         # Code created following Google official API documentation:
         # https://cloud.google.com/bigquery/docs/reference/libraries
         # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries?hl=pt-br#bigquery_simple_app_query-python
 
-        # Getting credential files path
-        try:
-            credentials_path = os.environ["CREDENTIALS_HOME"]
-            logger.debug(f"Environment Variable found: {credentials_path}")
-        except KeyError:
-            credentials_path = ""
-            logger.warning("Environment Not Variable found")
+        # Getting credentials
+        google_creds = fetch_credentials("Google")
+        connect_file = google_creds["secret_filename"]
+        credentials_path = os.environ["CREDENTIALS_HOME"]
 
         # Sets environment if not yet set
         if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
@@ -85,7 +83,7 @@ class BigQueryTool(object):
 
 
 def test():
-    bq = BigQueryTool(connect_file="revelo-hebe-29868b4d02e4.json")
+    bq = BigQueryTool()
 
     sql_test_query = """SELECT MAX(etl_tstamp) FROM `revelo-hebe.source_fausto.atomic_events`"""
 

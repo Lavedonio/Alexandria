@@ -1,6 +1,8 @@
 import os
 import logging
 import boto3
+from botocore.exceptions import ClientError
+from General_Tools import fetch_credentials
 
 
 # Logging Configuration
@@ -84,7 +86,32 @@ class S3Tool(object):
         if s3_path is not None:
             bucket, subfolder = parse_s3_path(s3_path)
 
-        self.s3 = boto3.resource("s3")
+        # Getting credentials
+        aws_creds = fetch_credentials("AWS")
+
+        try:
+            s3_resource = boto3.resource("s3")
+        except ClientError:
+            s3_resource = None
+            logger.warning("Credentials not set in AWS CLI. Recommended to do so.")
+            print("Credentials not set in AWS CLI. Recommended to do so.")
+
+        if s3_resource is None:
+            try:
+                session = boto3.Session(
+                    aws_access_key_id=aws_creds["access_key"],
+                    aws_secret_access_key=aws_creds["secret_key"],
+                )
+                s3_resource = session.resource("s3")
+            except Exception as e:
+                s3_resource = None
+                logger.exception("Invalid AWS credentials")
+                print("Invalid AWS credentials")
+                raise e
+
+        logger.debug("Connected to S3 by boto3")
+
+        self.s3 = s3_resource
         self.bucket_name = bucket
         self.subfolder = subfolder
 

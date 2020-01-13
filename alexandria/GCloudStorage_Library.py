@@ -1,6 +1,7 @@
 import os
 import logging
 from google.cloud import storage
+from General_Tools import fetch_credentials
 
 
 # Logging Configuration
@@ -52,7 +53,7 @@ class GCloudStorageTool(object):
     """This class handle most of the interaction needed with Google Cloud Storage,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, connect_file, bucket=None, subfolder="", gs_path=None):
+    def __init__(self, bucket=None, subfolder="", gs_path=None):
         if all(param is not None for param in [bucket, gs_path]):
             logger.error("Specify either bucket name or full Google Cloud Storage path.")
             raise ValueError("Specify either bucket name or full Google Cloud Storage path.")
@@ -63,13 +64,10 @@ class GCloudStorageTool(object):
         if gs_path is not None:
             bucket, subfolder = parse_gs_path(gs_path)
 
-        # Getting credential files path
-        try:
-            credentials_path = os.environ["CREDENTIALS_HOME"]
-            logger.debug(f"Environment Variable found: {credentials_path}")
-        except KeyError:
-            credentials_path = ""
-            logger.warning("Environment Not Variable found")
+        # Getting credentials
+        google_creds = fetch_credentials("Google")
+        connect_file = google_creds["secret_filename"]
+        credentials_path = os.environ["CREDENTIALS_HOME"]
 
         # Sets environment if not yet set
         if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
@@ -193,11 +191,11 @@ class GCloudStorageTool(object):
 
 
 def test():
-    cloud_storage = GCloudStorageTool(connect_file="revelo-hebe-29868b4d02e4.json")
+    cloud_storage = GCloudStorageTool()
 
     gs_path = "gs://revelo_app_etl/"
 
-    cloud_storage = GCloudStorageTool(connect_file="revelo-hebe-29868b4d02e4.json", gs_path=gs_path)
+    cloud_storage = GCloudStorageTool(gs_path=gs_path)
     gs_path = "gs://revelo_app_etl/revelo-app/"
     cloud_storage.set_by_path(gs_path)
 
