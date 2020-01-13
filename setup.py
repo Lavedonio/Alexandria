@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="alexandria-lavedonio",
-    version="0.0.2",
+    version="0.0.4",
     author="Daniel Lavedonio de Lima",
     author_email="daniel.lavedonio@gmail.com",
     description="A package to help with DB connections and commonly used functionally in data analytics",
@@ -14,6 +14,7 @@ setuptools.setup(
     url="https://github.com/Lavedonio/alexandria",
     packages=setuptools.find_packages(),
     install_requires=[
+        'pyyaml',
         'boto3',
         'google-cloud-bigquery',
         'google-cloud-storage',
