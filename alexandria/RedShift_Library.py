@@ -3,7 +3,7 @@ import logging
 import boto3
 import psycopg2
 import pandas as pd
-from General_Tools import fetch_credentials
+from .General_Tools import fetch_credentials
 
 
 # Logging Configuration

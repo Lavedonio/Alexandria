@@ -1,7 +1,7 @@
 import os
 import logging
 from google.cloud import bigquery
-from General_Tools import fetch_credentials
+from .General_Tools import fetch_credentials
 
 
 # Logging Configuration
