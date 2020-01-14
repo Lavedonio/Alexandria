@@ -20,7 +20,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="alexandria-lavedonio",
-    version="0.0.5",
+    version="0.0.7",
     author="Daniel Lavedonio de Lima",
     author_email="daniel.lavedonio@gmail.com",
     description="A package to help with DB connections and commonly used functionally in data analytics",
@@ -32,6 +32,7 @@ setuptools.setup(
         'pyyaml',
         'boto3',
         'google-cloud-bigquery',
+        'google-cloud-bigquery-datatransfer',
         'google-cloud-storage',
         'pandas',
         'psycopg2',
