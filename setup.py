@@ -1,11 +1,13 @@
 import setuptools
 
+# Documentation at https://packaging.python.org/tutorials/packaging-projects/
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="alexandria-lavedonio",
-    version="0.0.4",
+    version="0.0.5",
     author="Daniel Lavedonio de Lima",
     author_email="daniel.lavedonio@gmail.com",
     description="A package to help with DB connections and commonly used functionally in data analytics",
