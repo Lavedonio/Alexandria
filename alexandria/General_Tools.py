@@ -18,8 +18,9 @@ logger.addHandler(file_handler)
 
 
 def fetch_credentials(service_name, **kwargs):
-    """Gets the credentials from the folder set in CREDENTIALS_HOME variable
-    and returns the credentials of the selected service in a dictionary."""
+    """Gets the credentials from the folder set in CREDENTIALS_HOME and file set in CREDENTIALS_SECRET
+    variables and returns the credentials of the selected service in a dictionary.
+    If service is "credentials_path", a path is returned instead."""
 
     # Getting credential files path
     try:
@@ -29,6 +30,9 @@ def fetch_credentials(service_name, **kwargs):
         logger.exception('Environment Variable "CREDENTIALS_HOME" not found')
         print('Environment Variable "CREDENTIALS_HOME" not found')
         raise e
+
+    if service_name == "credentials_path":
+        return credentials_path
 
     # Getting credential secret file path
     try:
@@ -57,6 +61,8 @@ def test():
     print(fetch_credentials("AWS"))
 
     print(fetch_credentials("RedShift", connection_type="cluster_credentials"))
+
+    print(fetch_credentials("credentials_path"))
 
 
 if __name__ == '__main__':
