@@ -1,6 +1,8 @@
 import os
 import logging
 from google.cloud import bigquery
+from google.cloud import bigquery_datatransfer_v1
+from google.protobuf.timestamp_pb2 import Timestamp
 from .General_Tools import fetch_credentials
 
 
@@ -46,6 +48,7 @@ class BigQueryTool(object):
             raise e
 
         self.client = bq_client
+        self.transfer_client = None
 
     def query(self, sql_query):
         """Run a query and return the results as a Pandas Dataframe"""
@@ -81,6 +84,28 @@ class BigQueryTool(object):
         destination = dataset + "." + table
         dataframe.to_gbq(destination, chunksize=None, if_exists=if_exists)
 
+    def start_transfer(self, project_path):
+        """Trigger a transfer to start executing in BigQuery Transfer."""
+
+        # Initiating client
+        self.transfer_client = bigquery_datatransfer_v1.DataTransferServiceClient()
+
+        # Getting current timestamp so it starts now.
+        # Google documentation: https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/timestamp
+        # StackOverflow answer: https://stackoverflow.com/questions/49161633/how-do-i-create-a-protobuf3-timestamp-in-python
+        timestamp = Timestamp()
+        timestamp.GetCurrentTime()
+
+        # Triggering transfer
+        response = self.transfer_client.start_manual_transfer_runs(parent=project_path, requested_run_time=timestamp)
+
+        # Parse response to get state parameter
+        state_location = str(response).find("state: ")
+        state_param = str(response)[state_location:].split("\n", 1)[0]
+        state = state_param.replace("state: ", "")
+
+        return state
+
 
 def test():
     bq = BigQueryTool()
@@ -113,6 +138,11 @@ def test():
     table = "signup"
 
     bq.upload(df, dataset, table)
+
+    transfer_config = "projects/118480078918/transferConfigs/5e35261a-0000-2d5a-bd96-24058872d28c"
+    print("Starting transfer...")
+    state_response = bq.start_transfer(project_path=transfer_config)
+    print(f"Transfer status: {state_response}")
 
 
 if __name__ == '__main__':
