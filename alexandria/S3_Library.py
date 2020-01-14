@@ -2,7 +2,7 @@ import os
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from .General_Tools import fetch_credentials
+from General_Tools import fetch_credentials
 
 
 # Logging Configuration
@@ -131,12 +131,55 @@ class S3Tool(object):
     def get_s3_path(self):
         return f"s3://{self.bucket_name}/{self.subfolder}"
 
+    def rename_file(self, new_filename, old_filename):
+        """Rename only filename from path key, so the final result is similar to rename a file."""
+
+        old_key = self.subfolder + old_filename
+        new_key = self.subfolder + new_filename
+
+        if old_key not in self.list_contents():
+            logger.exception(f"File {old_filename} does not exist in path s3://{self.bucket_name}/{self.subfolder}")
+            raise ValueError(f"File {old_filename} does not exist in path s3://{self.bucket_name}/{self.subfolder}")
+
+        source_file = f"{self.bucket_name}/{self.subfolder}{old_filename}"
+        self.s3.Object(self.bucket, new_key).copy_from(CopySource=source_file)
+        self.s3.Object(self.bucket, old_key).delete()
+
+    def rename_subfolder(self, new_subfolder):
+        """Renames all keys, so the final result is similar to rename a subfolder."""
+
+        # Added a / at the end if it was not given with one
+        if len(new_subfolder) != 0 and not new_subfolder.endswith("/"):
+            new_subfolder += "/"
+
+        contents = self.list_contents()
+
+        # Get "folder" object if exists
+        if self.subfolder != "":
+            if self.subfolder in [x.key for x in self.bucket.objects.filter(Prefix=self.subfolder, Delimiter="/")]:
+                contents.append(self.subfolder)
+                logger.debug("Subfolder object added to contents list.")
+
+        for old_key in contents:
+            new_key = old_key.replace(self.subfolder, new_subfolder, 1)
+            logger.debug(f"old_key: {old_key}")
+            logger.debug(f"new_key: {new_key}")
+
+            source_file = f"{self.bucket_name}/{old_key}"
+            logger.debug(f"source_file: {source_file}")
+
+            self.s3.Object(self.bucket_name, new_key).copy_from(CopySource=source_file)
+            self.s3.Object(self.bucket_name, old_key).delete()
+
+        logger.debug("Setting class subfolder to new_subfolder")
+        self.set_subfolder(new_subfolder)
+
     def list_all_buckets(self):
         """Returns a list of all Buckets in S3"""
 
         return [bucket.name for bucket in self.s3.buckets.all()]
 
-    def list_bucket_contents(self, yield_results=False):
+    def list_contents(self, yield_results=False):
         """Lists all files that correspond with bucket and subfolder set at the initialization.
         It can either return a list or yield a generator.
         Lists can be more familiar to use, but when dealing with large amounts of data,
@@ -218,6 +261,13 @@ class S3Tool(object):
 
         self.bucket.upload_file(filename, remote_path)
 
+    def upload_subfolder(self, folder_path):
+        """Uploads a local folder to with prefix as currently set enviroment (bucket and subfolder).
+        Keeps folder structure as prefix in S3. Behaves as if it was downloading an entire folder to current path."""
+
+        # Still in development
+        raise NotImplementedError
+
     def download_file(self, remote_path, filename=None):
         """Downloads remote S3 file to local path.
 
@@ -262,18 +312,54 @@ class S3Tool(object):
         os.makedirs(path, exist_ok=True)
         os.replace(filename, os.path.join(path, filename))
 
+    def download_subfolder(self):
+        """Downloads remote S3 files in currently set enviroment (bucket and subfolder).
+        Behaves as if it was downloading an entire folder to current path."""
+
+        # Still in development
+        raise NotImplementedError
+
+    def delete_file(self, filename, fail_silently=False):
+        """Deletes file. Raises an error if file doesn't exist and fail_silently parameter is set to False."""
+
+        key = self.subfolder + filename
+        logger.debug(f"key: {key}")
+
+        if key in self.list_contents():
+            self.s3.Object(self.bucket, key).delete()
+
+        else:
+            if not fail_silently:
+                logger.exception(f"File {filename} does not exist in path s3://{self.bucket_name}/{self.subfolder}")
+                raise ValueError(f"File {filename} does not exist in path s3://{self.bucket_name}/{self.subfolder}")
+
+    def delete_subfolder(self):
+        """Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder.
+        Raises an error if file doesn't exist and fail_silently parameter is set to False."""
+
+        contents = self.list_contents()
+
+        # Get "folder" object if exists
+        if self.subfolder != "":
+            if self.subfolder in [x.key for x in self.bucket.objects.filter(Prefix=self.subfolder, Delimiter="/")]:
+                contents.append(self.subfolder)
+                logger.debug("Subfolder object added to contents list.")
+
+        for file in contents:
+            self.s3.Object(self.bucket_name, file).delete()
+
 
 def test():
     bucket_name = "alexandria-teste"
-    s3_path = "s3://snowplow-emretl-revelo/"
+    s3_path = "s3://revelo-redshift-data/teste_import/"
 
     s3 = S3Tool(s3_path=s3_path)
-    s3_path = "s3://revelo-redshift-data/teste_import/"
+    s3_path = "s3://revelo-redshift-data/extraction/"
     s3.set_by_path(s3_path)
 
     # contents = s3.list_buckets()
 
-    contents = s3.list_bucket_contents()
+    contents = s3.list_contents()
 
     print("File list now:")
     for index, content in enumerate(contents):
@@ -283,15 +369,18 @@ def test():
     new_file = "C:\\Users\\USER\\Downloads\\teste\\teste.txt"
     remote = s3_path + "teste.txt"
 
-    s3.upload(file)
+    # s3.upload(file)
+    # s3.rename_subfolder("extraction_test/")
+    # s3.delete_file("teste.txt")
+    s3.delete_subfolder()
 
-    contents = s3.list_bucket_contents()
+    contents = s3.list_contents()
 
     print("\nUpdated file list:")
     for index, content in enumerate(contents):
         print(f"{index}: {content}")
 
-    s3.download_file(remote)
+    # s3.download_file(remote)
 
 
 if __name__ == '__main__':
