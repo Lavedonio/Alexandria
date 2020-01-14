@@ -30,7 +30,7 @@ class BigQueryTool(object):
         # Getting credentials
         google_creds = fetch_credentials("Google")
         connect_file = google_creds["secret_filename"]
-        credentials_path = os.environ["CREDENTIALS_HOME"]
+        credentials_path = fetch_credentials("credentials_path")
 
         # Sets environment if not yet set
         if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
