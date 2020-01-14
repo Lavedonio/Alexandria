@@ -2,7 +2,7 @@ import os
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from General_Tools import fetch_credentials
+from .General_Tools import fetch_credentials
 
 
 # Logging Configuration
