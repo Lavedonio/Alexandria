@@ -1,6 +1,19 @@
 import setuptools
 
 # Documentation at https://packaging.python.org/tutorials/packaging-projects/
+#
+# To compile the project into wheel (built distribution) and tar.gz (source archive) files, run the command:
+# python setup.py sdist bdist_wheel
+#
+# To upload the distribution packages into Test PyPI, run the command:
+# python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+# And to install it:
+# pip install -i https://test.pypi.org/simple/ alexandria-lavedonio
+#
+# To upload the distribution packages into PyPI, run the command:
+# python -m twine upload dist/*
+# And to install it:
+# pip install alexandria-lavedonio
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
