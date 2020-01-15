@@ -47,10 +47,14 @@ def fetch_credentials(service_name, **kwargs):
     with open(secrets_path, "r") as stream:
         secrets = yaml.safe_load(stream)
 
-    # Variable connection_type is mainly for RedShift, since it has 2 ways of connecting to the database
+    # Variable connection_type is mainly for RedShift, since it has 2 ways of connecting to the database.
+    # Variable dictionary is for BigQuery project name/id dictionaries.
     if kwargs.get("connection_type") is not None:
         connection_type = kwargs["connection_type"]
         return secrets[service_name][connection_type]
+    elif kwargs.get("dictionary") is not None:
+        dictionary = kwargs["dictionary"]
+        return secrets[service_name][dictionary]
     else:
         return secrets[service_name]
 
