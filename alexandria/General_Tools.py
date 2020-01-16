@@ -18,30 +18,22 @@ logger.addHandler(file_handler)
 
 
 def fetch_credentials(service_name, **kwargs):
-    """Gets the credentials from the folder set in CREDENTIALS_HOME and file set in CREDENTIALS_SECRET
-    variables and returns the credentials of the selected service in a dictionary.
+    """Gets the credentials from the secret file set in CREDENTIALS_HOME variable
+    and returns the credentials of the selected service in a dictionary.
     If service is "credentials_path", a path is returned instead."""
 
-    # Getting credential files path
+    # Getting credentials' secret file path
     try:
-        credentials_path = os.environ["CREDENTIALS_HOME"]
-        logger.debug(f"Environment Variable found: {credentials_path}")
+        secrets_path = os.environ["CREDENTIALS_HOME"]
+        logger.debug(f"Environment Variable found: {secrets_path}")
     except KeyError as e:
         logger.exception('Environment Variable "CREDENTIALS_HOME" not found')
         print('Environment Variable "CREDENTIALS_HOME" not found')
         raise e
 
+    # Getting credentials' folder path
     if service_name == "credentials_path":
-        return credentials_path
-
-    # Getting credential secret file path
-    try:
-        secrets_path = os.environ["CREDENTIALS_SECRET"]
-        logger.debug(f"Environment Variable found: {secrets_path}")
-    except KeyError as e:
-        logger.exception('Environment Variable "CREDENTIALS_SECRET" not found')
-        print('Environment Variable "CREDENTIALS_SECRET" not found')
-        raise e
+        return os.path.dirname(secrets_path)
 
     # Retrieving secrets from file
     with open(secrets_path, "r") as stream:
@@ -49,12 +41,9 @@ def fetch_credentials(service_name, **kwargs):
 
     # Variable connection_type is mainly for RedShift, since it has 2 ways of connecting to the database.
     # Variable dictionary is for BigQuery project name/id dictionaries.
-    if kwargs.get("connection_type") is not None:
-        connection_type = kwargs["connection_type"]
-        return secrets[service_name][connection_type]
-    elif kwargs.get("dictionary") is not None:
-        dictionary = kwargs["dictionary"]
-        return secrets[service_name][dictionary]
+    if kwargs.get("connection_type") is not None or kwargs.get("dictionary") is not None:
+        second_kwarg = kwargs.get("connection_type") or kwargs.get("dictionary")
+        return secrets[service_name][second_kwarg]
     else:
         return secrets[service_name]
 
