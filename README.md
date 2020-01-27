@@ -6,10 +6,10 @@ This Python library is an open source way to standardize and simplify connection
 - [Prerequisites](https://github.com/Lavedonio/instackup#prerequisites)
 - [Installation](https://github.com/Lavedonio/instackup#installation)
 - [Documentation](https://github.com/Lavedonio/instackup#documentation)
-	- [BigQuery_Library](https://github.com/Lavedonio/instackup#bigquery_library)
-	- [GCloudStorage_Library](https://github.com/Lavedonio/instackup#gcloudstorage_library)
-	- [RedShift_Library](https://github.com/Lavedonio/instackup#redshift_library)
-	- [S3_Library](https://github.com/Lavedonio/instackup#s3_library)
+	- [bigquery_tools](https://github.com/Lavedonio/instackup#bigquery_tools)
+	- [gcloudstorage_tools](https://github.com/Lavedonio/instackup#gcloudstorage_tools)
+	- [redshift_tools](https://github.com/Lavedonio/instackup#redshift_tools)
+	- [s3_tools](https://github.com/Lavedonio/instackup#s3_tools)
 
 ## Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -98,15 +98,15 @@ Go to the Terminal and type:
     pip install -i https://test.pypi.org/simple/ instackup
 
 ## Documentation
-### BigQuery_Library
+### bigquery_tools
 *To be defined...*
 
-### GCloudStorage_Library
+### gcloudstorage_tools
 *To be defined...*
 
-### RedShift_Library
+### redshift_tools
 *To be defined...*
 
-### S3_Library
+### s3_tools
 *To be defined...*
 
