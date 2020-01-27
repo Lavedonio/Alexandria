@@ -2,7 +2,7 @@ import os
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from .General_Tools import fetch_credentials
+from .general_tools import fetch_credentials
 
 
 # Logging Configuration
@@ -13,7 +13,7 @@ formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
-file_handler = logging.FileHandler(os.path.join(LOG_DIR, "S3_Library.log"))
+file_handler = logging.FileHandler(os.path.join(LOG_DIR, "s3_tools.log"))
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
