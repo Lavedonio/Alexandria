@@ -8,25 +8,25 @@ import setuptools
 # To upload the distribution packages into Test PyPI, run the command:
 # python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 # And to install it:
-# pip install -i https://test.pypi.org/simple/ alexandria-lavedonio
+# pip install -i https://test.pypi.org/simple/ instackup
 #
 # To upload the distribution packages into PyPI, run the command:
 # python -m twine upload dist/*
 # And to install it:
-# pip install alexandria-lavedonio
+# pip install instackup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="alexandria-lavedonio",
-    version="0.0.9",
+    name="instackup",
+    version="0.0.1",
     author="Daniel Lavedonio de Lima",
     author_email="daniel.lavedonio@gmail.com",
     description="A package to help with DB connections and commonly used functionally in data analytics",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Lavedonio/alexandria",
+    url="https://github.com/Lavedonio/instackup",
     packages=setuptools.find_packages(),
     install_requires=[
         'pyyaml',
