@@ -123,6 +123,10 @@ class S3Tool(object):
         self.bucket_name = bucket
 
     def set_subfolder(self, subfolder):
+        # Clean subfolder into something it will not crash a method later
+        if len(subfolder) != 0 and not subfolder.endswith("/"):
+            subfolder += "/"
+
         self.subfolder = subfolder
 
     def set_by_path(self, s3_path):
@@ -335,7 +339,8 @@ class S3Tool(object):
 
     def delete_subfolder(self):
         """Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder.
-        Raises an error if file doesn't exist and fail_silently parameter is set to False."""
+        Raises an error if file doesn't exist and fail_silently parameter is set to False.
+        Once the subfolder is deleted, it resets to no extra path (empty subfolder name)."""
 
         contents = self.list_contents()
 
@@ -347,6 +352,9 @@ class S3Tool(object):
 
         for file in contents:
             self.s3.Object(self.bucket_name, file).delete()
+
+        # Once the subfolder is deleted, it resets to no extra path
+        self.subfolder = ""
 
 
 def test():
