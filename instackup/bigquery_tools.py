@@ -77,7 +77,7 @@ class BigQueryTool(object):
             'replace': If table exists, drop it, recreate it, and insert data.
             'append': If table exists, insert data. Create if does not exist.
 
-        Full documentation for Pandas export to BigQUery can be found here:
+        Full documentation for Pandas export to BigQuery can be found here:
         https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
         """
 
