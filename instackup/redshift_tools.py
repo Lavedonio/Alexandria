@@ -164,6 +164,13 @@ class RedShiftTool(object):
         return result
 
     def unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'"):
+        """Executes an unload command in RedShift database to copy data to S3.
+        Takes the parameters redshift_query to grab the data, s3_path to set the location of copied data,
+        filename as the custom prefix of the file and unload options.
+
+        Unload options can be better understood in this link:
+        https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html
+        """
 
         if s3_path.endswith("/"):
             s3_path = s3_path[:-1]
