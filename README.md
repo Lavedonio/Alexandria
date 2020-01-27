@@ -1,29 +1,27 @@
-# Alexandria
-A Biblioteca de Alexandria (em latim: Bibliotheca Alexandrina) foi uma das mais significativas e célebres bibliotecas e um dos maiores centros de produção do conhecimento na Antiguidade. [[Wikipedia](https://pt.wikipedia.org/wiki/Biblioteca_de_Alexandria)]
+# Instackup
+This Python library is an open source way to standardize and simplify connections with cloud-based tools and databases and commonly used tools in data manipulation and analysis.
 
-Esta biblioteca, no entanto, refere-se ao código criado para facilitar a manipulação com conexões de banco de dados na nuvem e com ferramentas comumente usadas na manipulação e análise de dados.
+## Index
 
-## Sumário
+- [Prerequisites](https://github.com/Lavedonio/instackup#prerequisites)
+- [Installation](https://github.com/Lavedonio/instackup#installation)
+- [Documentation](https://github.com/Lavedonio/instackup#documentation)
+	- [BigQuery_Library](https://github.com/Lavedonio/instackup#bigquery_library)
+	- [GCloudStorage_Library](https://github.com/Lavedonio/instackup#gcloudstorage_library)
+	- [RedShift_Library](https://github.com/Lavedonio/instackup#redshift_library)
+	- [S3_Library](https://github.com/Lavedonio/instackup#s3_library)
 
-- [Pré-Requisitos](https://github.com/Lavedonio/alexandria#pr%C3%A9-requisitos)
-- [Instalação](https://github.com/Lavedonio/alexandria#instala%C3%A7%C3%A3o)
-- [Documentação](https://github.com/Lavedonio/alexandria#documenta%C3%A7%C3%A3o)
-	- [BigQuery_Library](https://github.com/Lavedonio/alexandria#bigquery_library)
-	- [GCloudStorage_Library](https://github.com/Lavedonio/alexandria#gcloudstorage_library)
-	- [RedShift_Library](https://github.com/Lavedonio/alexandria#redshift_library)
-	- [S3_Library](https://github.com/Lavedonio/alexandria#s3_library)
+## Prerequisites
+1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
+2. Create a YAML file with credentials information;
+3. [Optional but recommended] Configure an Environment Variable that points where the Credentials file is.
 
-## Pré-Requisitos
-1. Possuir uma versão [Python 3.6 ou superior](https://www.python.org/downloads/) instalada;
-2. Criar um arquivo YAML com as credenciais;
-3. Configurar a Variável de Ambiente para o arquivo onde estão as Credenciais.
+### 1. Have a Python 3.6 version or superior installed
+Got to this [link](https://www.python.org/downloads/) e download the most current version that is compatible with this package.
 
-### 1. Possuir uma versão Python 3.6 ou superior instalada
-Entre no [link](https://www.python.org/downloads/) e baixe a versão mais atual que seja compatível com o pacote.
+### 2. Create a YAML file with credentials information
 
-### 2. Criar um arquivo YAML com as credenciais
-
-Utilize os arquivos [secret_template.yml](https://github.com/Lavedonio/alexandria/blob/master/credentials/secret_template.yml) ou [secret_blank.yml](https://github.com/Lavedonio/alexandria/blob/master/credentials/secret_blank.yml) como base ou copie e cole o código abaixo como base e modifique os valores para os das suas credenciais e projetos:
+Use the files [secret_template.yml](https://github.com/Lavedonio/instackup/blob/master/credentials/secret_template.yml) or [secret_blank.yml](https://github.com/Lavedonio/instackup/blob/master/credentials/secret_blank.yml) as a base or copy and paste the code bellow and modify its values to the ones in your credentials/projects:
 
 ```
 #################################################################
@@ -68,32 +66,38 @@ RedShift:
     password: masterpassword
     port: 5439
 ```
-Salve este arquivo com a extensão `.yml` em um local que o caminho não será modificado, como uma pasta no Desktop (Exemplo: `C:\Users\USER\Desktop\Credentials\secret.yml`).
+Save this file with `.yml` extension in a folder where you know the path won't be modified, like the Desktop folder (Example: `C:\Users\USER\Desktop\Credentials\secret.yml`).
 
-Para fazer a configuração da variável de ambiente siga os passos abaixo, de acordo com as instruções a seguir dependendo do seu sistema operacional.
+### 3. [Optional but recommended] Configure an Environment Variable that points where the Credentials file is.
+
+To configure the Environment Variable, follow the instructions bellow, based on your Operating System.
 
 #### Windows
-1. Coloque o arquivo YAML numa pasta no local que julgar mais adequado;
-2. Na pesquisa do Windows, digite `Variáveis de Ambiente` e clique no resultado do Painel de Controle;
-3. Clique no botão `Variáveis de Ambiente...`;
-4. Nas **Variáveis de usuário**, clique no botão `Novo`;
-5. Em **Nome da variável** digite `CREDENTIALS_HOME` e em **Valor da variável** coloque o caminho para o arquivo YAML na pasta recém criada;
-6. Dê **Ok** nas 3 janelas abertas.
+1. Place the YAML file in a folder you won't change its name or path later;
+2. In Windows Search, type `Environment Variables` and click in the Control Panel result;
+3. Click on the button `Environment Variables...`;
+4. In **Environment Variables**, click on the button `New`;
+5. In **Variable name** type `CREDENTIALS_HOME` and in **Variable value** paste the full path to the recently created YAML file;
+6. Click **Ok** in the 3 open windows.
 
 #### Linux/MacOS
-1. Coloque o arquivo YAML numa pasta no local que julgar mais adequado;
-2. Abra o arquivo `.bashrc`. Se ele não existir, crie um no diretório `HOME`. Se não souber chegar nele, abra o Terminal, digite `cd` e dê **ENTER**;
-3. Dentro do arquivo, digite em uma nova linha o comando: `export CREDENTIALS_HOME="/path/to/file"`, substituindo o conteúdo dentro das aspas pelo caminho para o arquivo YAML na pasta recém criada;
-4. Salve o arquivo e reinicie todas as janelas do Terminal que estiverem abertas.
+1. Place the YAML file in a folder you won't change its name or path later;
+2. Open the file `.bashrc`. If it doesn't exists, create one in the `HOME` directory. If you don't know how to get there, open the Terminal, type `cd` and then **ENTER**;
+3. Inside the file, in a new line, type the command: `export CREDENTIALS_HOME="/path/to/file"`, replacing the content inside quotes by the full path to the recently created YAML file;
+4. Save the file and restart all open Terminal windows.
 
-> **Nota:** Para que esta biblioteca funcione corretamente, é estritamente necessário que o nome da variável de ambiente seja exatamente `CREDENTIALS_HOME`.
+> **Note:** If you don't follow this last prerequisite, you need to set the environment variable manually inside the code. To do that, inside your python code, after the imports, type the command (replacing the content inside quotes by the full path to the recently created YAML file):
 
-## Instalação
-Vá ao terminal e digite:
+```
+os.environ["CREDENTIALS_HOME"] = "/path/to/file"
+```
 
-    pip install -i https://test.pypi.org/simple/ alexandria-lavedonio
+## Installation
+Go to the Terminal and type:
 
-## Documentação
+    pip install -i https://test.pypi.org/simple/ instackup
+
+## Documentation
 ### BigQuery_Library
 *To be defined...*
 
