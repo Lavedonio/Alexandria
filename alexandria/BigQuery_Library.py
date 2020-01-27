@@ -93,7 +93,8 @@ class BigQueryTool(object):
         project_ids = fetch_credentials("BigQuery", dictionary="project_id")
 
         # Initiating client
-        self.transfer_client = bigquery_datatransfer_v1.DataTransferServiceClient()
+        if self.transfer_client is None:
+            self.transfer_client = bigquery_datatransfer_v1.DataTransferServiceClient()
 
         # If project_path is given with other parameter, it will ignore the others and continue with
         # project_path given.
@@ -148,6 +149,13 @@ def test():
     bq = BigQueryTool()
 
     sql_test_query = """SELECT MAX(etl_tstamp) FROM `revelo-hebe.source_fausto.atomic_events`"""
+    new_sql_query = """
+        SELECT name, email, split(email, '@')[OFFSET(1)] AS domain, profile_status, dashboard_status
+        FROM source_revelo_internal.users
+        WHERE  employer = false
+        AND split(email, '@')[OFFSET(1)] = "hotmail.com"
+        LIMIT 75600
+    """
 
     sql_query = """
     SELECT
@@ -168,19 +176,43 @@ def test():
     WHERE
       users.employer = true"""
 
-    df = bq.query(sql_query)
-    print(df)
+    # print("Iniciando query...")
+    # df = bq.query(new_sql_query)
+    # print(df.shape)
+    # print(df)
+    # df.to_csv("query_CRM.csv", sep=",", index=False)
+    import pandas as pd
+    df = pd.read_csv("C:\\Users\\USER\\Downloads\\apollo-phone_calls-export.csv")
+    df.columns = df.columns.str.replace(' ', '_')
+    df.columns = df.columns.str.replace('.', '')
+    df.columns = df.columns.str.replace('(', '_')
+    df.columns = df.columns.str.replace(')', '_')
+    df.columns = df.columns.str.replace('/', '_')
+    df.columns = df.columns.str.replace('-', '')
+    df.columns = df.columns.str.replace('ç', 'c')
+    df.columns = df.columns.str.replace('ã', 'a')
+    df.columns = df.columns.str.replace('ê', 'e')
+    df.columns = df.columns.str.replace('#', 'Num_de')
+    for name, _ in df.iteritems():
+        # print(name)
+        try:
+            int(name[0])
+        except ValueError:
+            pass
+        else:
+            new_name = "_" + name
+            df.rename(columns={name: new_name}, inplace=True)
 
-    dataset = "company"
-    table = "signup"
+    dataset = "sandbox"
+    table = "calls"
 
     bq.upload(df, dataset, table)
 
-    transfer_config = "projects/118480078918/transferConfigs/5e35261a-0000-2d5a-bd96-24058872d28c"
-    print("Starting transfer...")
-    state_response = bq.start_transfer(project_path=transfer_config)
-    state_response = bq.start_transfer(project_name="revelo-hebe", transfer_name="atomic_events_test3")
-    print(f"Transfer status: {state_response}")
+    # transfer_config = "projects/118480078918/transferConfigs/5e35261a-0000-2d5a-bd96-24058872d28c"
+    # print("Starting transfer...")
+    # state_response = bq.start_transfer(project_path=transfer_config)
+    # state_response = bq.start_transfer(project_name="revelo-hebe", transfer_name="atomic_events_test3")
+    # print(f"Transfer status: {state_response}")
 
 
 if __name__ == '__main__':
