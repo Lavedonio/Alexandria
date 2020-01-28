@@ -5,7 +5,7 @@ import logging
 
 # Logging Configuration
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
