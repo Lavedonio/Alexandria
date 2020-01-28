@@ -46,17 +46,3 @@ def fetch_credentials(service_name, **kwargs):
         return secrets[service_name][second_kwarg]
     else:
         return secrets[service_name]
-
-
-def test():
-    print(fetch_credentials(service_name="Google"))
-
-    print(fetch_credentials("AWS"))
-
-    print(fetch_credentials("RedShift", connection_type="cluster_credentials"))
-
-    print(fetch_credentials("credentials_path"))
-
-
-if __name__ == '__main__':
-    test()
