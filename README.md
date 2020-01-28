@@ -5,11 +5,13 @@ This Python library is an open source way to standardize and simplify connection
 
 - [Prerequisites](https://github.com/Lavedonio/instackup#prerequisites)
 - [Installation](https://github.com/Lavedonio/instackup#installation)
+- [Current release](https://github.com/Lavedonio/instackup)
 - [Documentation](https://github.com/Lavedonio/instackup#documentation)
 	- [bigquery_tools](https://github.com/Lavedonio/instackup#bigquery_tools)
 	- [gcloudstorage_tools](https://github.com/Lavedonio/instackup#gcloudstorage_tools)
 	- [redshift_tools](https://github.com/Lavedonio/instackup#redshift_tools)
 	- [s3_tools](https://github.com/Lavedonio/instackup#s3_tools)
+- [Version log](https://github.com/Lavedonio/instackup)
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -96,6 +98,71 @@ os.environ["CREDENTIALS_HOME"] = "/path/to/file"
 Go to the Terminal and type:
 
     pip install -i https://test.pypi.org/simple/ instackup
+
+# Current release
+## Version 0.0.1 (alpha)
+First alpha release:
+
+Added modules:
+- bigquery_tools
+- general_tools
+- redshift_tools
+- s3_tools
+
+Inside those modules, these classes and functions/methods were added:
+- BigQueryTool
+  - \_\_init\_\_
+  - query
+  - upload
+  - start_transfer
+- fetch_credentials
+- RedShiftTool
+  - \_\_init\_\_
+  - connect
+  - commit
+  - rollback
+  - execute_sql
+  - query
+  - unload_to_S3
+  - close_connection
+  - \_\_enter\_\_
+  - \_\_exit\_\_
+- parse_s3_path
+- S3Tool
+  - \_\_init\_\_
+  - bucket @property
+  - set_bucket
+  - set_subfolder
+  - set_by_path
+  - get_s3_path
+  - rename_file
+  - rename_subfolder
+  - list_all_buckets
+  - list_contents
+  - upload_file
+  - download_file
+  - delete_file
+  - delete_subfolder
+
+Modules still in development:
+- gcloudstorage_tools
+
+Inside this module, these classes and functions/methods are in development:
+- parse_gs_path
+- GCloudStorageTool
+  - \_\_init\_\_
+  - bucket @property
+  - set_bucket
+  - set_subfolder
+  - set_by_path
+  - get_gs_path
+  - list_all_buckets
+  - list_bucket_contents
+  - upload_file
+  - download_file
+- S3Tool
+  - upload_subfolder
+  - download_subfolder
 
 # Documentation
 ## bigquery_tools
@@ -809,3 +876,70 @@ s3.delete_folder()
 # Check new path structure
 print(s3.get_s3_path())
 ```
+
+# Version log
+See what changed in every version.
+
+### Version 0.0.1 (alpha)
+First alpha release:
+
+Added modules:
+- bigquery_tools
+- general_tools
+- redshift_tools
+- s3_tools
+
+Inside those modules, these classes and functions/methods were added:
+- BigQueryTool
+  - \_\_init\_\_
+  - query
+  - upload
+  - start_transfer
+- fetch_credentials
+- RedShiftTool
+  - \_\_init\_\_
+  - connect
+  - commit
+  - rollback
+  - execute_sql
+  - query
+  - unload_to_S3
+  - close_connection
+  - \_\_enter\_\_
+  - \_\_exit\_\_
+- parse_s3_path
+- S3Tool
+  - \_\_init\_\_
+  - bucket @property
+  - set_bucket
+  - set_subfolder
+  - set_by_path
+  - get_s3_path
+  - rename_file
+  - rename_subfolder
+  - list_all_buckets
+  - list_contents
+  - upload_file
+  - download_file
+  - delete_file
+  - delete_subfolder
+
+Modules still in development:
+- gcloudstorage_tools
+
+Inside this module, these classes and functions/methods are in development:
+- parse_gs_path
+- GCloudStorageTool
+  - \_\_init\_\_
+  - bucket @property
+  - set_bucket
+  - set_subfolder
+  - set_by_path
+  - get_gs_path
+  - list_all_buckets
+  - list_bucket_contents
+  - upload_file
+  - download_file
+- S3Tool
+  - upload_subfolder
+  - download_subfolder
