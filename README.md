@@ -99,10 +99,10 @@ Go to the Terminal and type:
 
 # Documentation
 ## bigquery_tools
-### BigQuery_Tool
+### BigQueryTool
 This class handle most of the interaction needed with BigQuery, so the base code becomes more readable and straightforward.
 
-#### __init__(self)
+#### \_\_init\_\_(self)
 Initialization takes no parameter and has no return value. It sets the bigquery client.
 
 Usage example:
@@ -183,7 +183,7 @@ print(f"Transfer status: {state_response}")
 
 ## general_tools
 ### fetch_credentials(service_name, \*\*kwargs)
-Gets the credentials from the secret file set in CREDENTIALS_HOME variable and returns the credentials of the selected service in a dictionary. If service is "credentials_path", a path is returned instead.
+Gets the credentials from the secret file set in `CREDENTIALS_HOME` variable and returns the credentials of the selected service in a dictionary. If service is "credentials_path", a path is returned instead.
 
 It's meant to be used basically by the other modules, not actually by the user of the library.
 
@@ -203,7 +203,7 @@ This class handle most of the interaction needed with RedShift, so the base code
 
 This class implements the with statement, so there are 2 ways of using it.
 
-1st way:
+**1st way:**
 
 ```
 from instackup.redshift_tools import RedShiftTool
@@ -212,7 +212,7 @@ with RedShiftTool() as rs:
     # use rs object to interact with RedShift database
 ```
 
-2nd way:
+**2nd way:**
 
 ```
 from instackup.redshift_tools import RedShiftTool
@@ -233,10 +233,10 @@ finally:
 
 Easy to see that it is recommended (and easier) to use the first syntax.
 
-#### __init__(self, connect_by_cluster=True)
+#### \_\_init\_\_(self, connect_by_cluster=True)
 Initialization takes connect_by_cluster parameter that sets connection type and has no return value.
 
-The __init__ method doesn't actually opens the connection, but sets all values required by the connect method.
+The \_\_init\_\_ method doesn't actually opens the connection, but sets all values required by the connect method.
 
 Usage example:
 ```
@@ -246,7 +246,7 @@ rs = RedShiftTool()
 ```
 
 #### connect(self, fail_silently=False)
-Create the connection using the __init__ attributes and returns its own object for with statement.
+Create the connection using the \_\_init\_\_ attributes and returns its own object for with statement.
 
 If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
 
@@ -526,16 +526,16 @@ prefix + filename. More information about this can be read in this StackOverFlow
 https://stackoverflow.com/questions/52443839/s3-what-exactly-is-a-prefix-and-what-ratelimits-apply
 
 All that means is that while you may see a path as:
-
+```
 s3://bucket-1/folder1/subfolder1/some_file.csv
-
 root| folder | sub.1 |  sub.2   |    file    |
+```
 
 It is actually:
-
+```
 s3://bucket-1/folder1/sub1/file.csv
-
 root| bucket |         key        |
+```
 
 A great (not directly related) thread that can help that sink in (and help understand some methods here)
 is this one: https://stackoverflow.com/questions/35803027/retrieving-subfolders-names-in-s3-bucket-from-boto3
@@ -544,7 +544,7 @@ In this class, all keys and keys prefix are being treated as a folder tree struc
 since the reason for this to exists is to make the programmers interactions with S3
 easier to write and the code easier to read.
 
-#### __init__(self, bucket=None, subfolder="", s3_path=None)
+#### \_\_init\_\_(self, bucket=None, subfolder="", s3_path=None)
 Takes a either s3_path or both bucket name and subfolder name as parameters to set the current working directory. It also opens a connection with AWS S3.
 
 The paradigm of this class is that all the operations are done in the current working directory, so it is important to set the right path (you can reset it later, but still).
@@ -562,7 +562,7 @@ s3 = S3Tool(bucket="some_other_bucket", subfolder="some_subfolder/subpath/")
 ```
 
 #### bucket(self) @property
-Returns the bucket object from the client based on the bucket name given in __init__ or set_bucket
+Returns the bucket object from the client based on the bucket name given in \_\_init\_\_ or set_bucket
 
 #### set_bucket(self, bucket)
 Takes a string as a parameter to reset the bucket name and bucket object. It has no return value.
