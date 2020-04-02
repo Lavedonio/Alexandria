@@ -1,5 +1,6 @@
 import os
 import logging
+import pandas as pd
 from google.cloud import bigquery
 from google.cloud import bigquery_datatransfer_v1
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -69,7 +70,19 @@ class BigQueryTool(object):
 
         return result
 
-    def clean_dataframe_columns(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789"):
+    def convert_dataframe_to_numeric(dataframe, exclude_columns=[], **kwargs):
+        """Transform all string type columns into floats, except those in exclude_columns list.
+
+        **kwargs are passed directly to pandas.to_numeric method.
+        The complete documentation of this method can be found here:
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_numeric.html
+        """
+        object_cols = dataframe.columns[dataframe.dtypes.eq('object')]
+        cols = [x for x in object_cols if x not in exclude_columns]
+        dataframe[cols] = dataframe[cols].apply(pd.to_numeric, **kwargs)
+        return dataframe
+
+    def clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789"):
         """Replace dataframe columns to only contain chars allowed in BigQuery tables column name."""
 
         column_map = {}
@@ -82,24 +95,22 @@ class BigQueryTool(object):
                 clean_data = "_" + clean_data
             column_map[raw_data] = clean_data
 
+        logger.debug(f"column_map = {column_map}")
         return dataframe.rename(column_map, axis=1)
 
-    def upload(self, dataframe, dataset, table, if_exists='fail'):
-        """Executes an insert SQL command into BigQuery
+    def upload(self, dataframe, dataset, table, **kwargs):
+        """Prepare dataframe columns and executes an insert SQL command into BigQuery
 
-        if_exists can take 3 different arguments:
-            'fail': If table exists, raises error.
-            'replace': If table exists, drop it, recreate it, and insert data.
-            'append': If table exists, insert data. Create if does not exist.
-
-        Full documentation for Pandas export to BigQuery can be found here:
+        **kwargs are passed directly to pandas.to_gbq method.
+        The complete documentation of this method can be found here:
         https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
         """
 
         dataframe = self.clean_dataframe_columns(dataframe)
 
+        logger.info("Starting upload...")
         destination = dataset + "." + table
-        dataframe.to_gbq(destination, chunksize=None, if_exists=if_exists)
+        dataframe.to_gbq(destination, **kwargs)
 
     def start_transfer(self, project_path=None, project_name=None, transfer_name=None):
         """Trigger a transfer to start executing in BigQuery Transfer.
