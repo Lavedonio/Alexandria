@@ -2,7 +2,7 @@ import os
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from .general_tools import fetch_credentials
+from .general_tools import fetch_credentials, parse_remote_uri
 
 
 # Logging Configuration
@@ -17,37 +17,6 @@ file_handler = logging.FileHandler(os.path.join(LOG_DIR, "s3_tools.log"))
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
-
-
-def parse_s3_path(s3_path):
-    """Parses a S3 path into bucket and subfolder(s).
-    Raises an error if S3 path is with wrong format."""
-
-    # If there isn't at least 3 "/" in the path, it will default to only set bucket name.
-    # If there isn't at least 2 "/" in the path, the path has a syntax error.
-    try:
-        s3_pattern, _, bucket, subfolder = s3_path.split("/", 3)
-    except ValueError:
-        try:
-            s3_pattern, _, bucket = s3_path.split("/", 2)
-        except ValueError:
-            logger.error(f"Invalid S3 full path '{s3_path}'!")
-            raise ValueError(f"Invalid S3 full path '{s3_path}'! Format should be like 's3://<bucket>/<subfolder>/'")
-        else:
-            subfolder = ""
-
-    # Clean subfolder into something it will not crash a method later
-    if len(subfolder) != 0 and not subfolder.endswith("/"):
-        subfolder += "/"
-
-    logger.debug(f"s3_pattern: '{s3_pattern}', bucket: '{bucket}', subfolder: '{subfolder}'")
-
-    # Check for valid path
-    if s3_pattern != "s3:":
-        logger.error(f"Invalid S3 full path '{s3_path}'!")
-        raise ValueError(f"Invalid S3 full path '{s3_path}'! Format should be like 's3://<bucket>/<subfolder>/'")
-
-    return bucket, subfolder
 
 
 class S3Tool(object):
@@ -84,7 +53,7 @@ class S3Tool(object):
         # Even if all parameters are set, it will overwrite the given bucket and subfolder parameters.
         # That means it will have a priority over the other parameters.
         if s3_path is not None:
-            bucket, subfolder = parse_s3_path(s3_path)
+            bucket, subfolder = parse_remote_uri(s3_path, "s3")
 
         # Getting credentials
         aws_creds = fetch_credentials("AWS")
@@ -130,7 +99,7 @@ class S3Tool(object):
         self.subfolder = subfolder
 
     def set_by_path(self, s3_path):
-        self.bucket_name, self.subfolder = parse_s3_path(s3_path)
+        self.bucket_name, self.subfolder = parse_remote_uri(s3_path, "s3")
 
     def get_s3_path(self):
         return f"s3://{self.bucket_name}/{self.subfolder}"
@@ -247,7 +216,7 @@ class S3Tool(object):
             # Tries to parse as a S3 path. If it fails, ignores this part
             # and doesn't change the value of remote_path parameter
             try:
-                bucket, subfolder = parse_s3_path(remote_path)
+                bucket, subfolder = parse_remote_uri(remote_path, "s3")
             except ValueError:
                 pass
             else:
@@ -255,7 +224,7 @@ class S3Tool(object):
                     logger.warning("Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
                     print("WARNING: Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
 
-                # parse_s3_path() function adds a "/" after a subfolder.
+                # parse_remote_uri() function adds a "/" after a subfolder.
                 # Since this is a file, the "/" must be removed.
                 remote_path = subfolder[:-1]
 
@@ -286,7 +255,7 @@ class S3Tool(object):
         # Tries to parse as a S3 path. If it fails, ignores this part
         # and doesn't change the value of remote_path parameter
         try:
-            bucket, subfolder = parse_s3_path(remote_path)
+            bucket, subfolder = parse_remote_uri(remote_path, "s3")
         except ValueError:
             pass
         else:
@@ -294,7 +263,7 @@ class S3Tool(object):
                 logger.warning("Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
                 print("WARNING: Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
 
-            # parse_s3_path() function adds a "/" after a subfolder.
+            # parse_remote_uri() function adds a "/" after a subfolder.
             # Since this is a file, the "/" must be removed.
             remote_path = subfolder[:-1]
 

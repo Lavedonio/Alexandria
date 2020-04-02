@@ -2,7 +2,7 @@ import os
 import logging
 import pandas as pd
 from google.cloud import storage
-from instackup.general_tools import fetch_credentials
+from instackup.general_tools import fetch_credentials, parse_remote_uri
 
 
 # Logging Configuration
@@ -19,37 +19,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-def parse_gs_path(gs_path):
-    """Parses a Google Cloud Storage (GS) path into bucket and subfolder(s).
-    Raises an error if GS path is with wrong format."""
-
-    # If there isn't at least 3 "/" in the path, it will default to only set bucket name.
-    # If there isn't at least 2 "/" in the path, the path has a syntax error.
-    try:
-        gs_pattern, _, bucket, subfolder = gs_path.split("/", 3)
-    except ValueError:
-        try:
-            gs_pattern, _, bucket = gs_path.split("/", 2)
-        except ValueError:
-            logger.error(f"Invalid Google Cloud Storage full path '{gs_path}'!")
-            raise ValueError(f"Invalid Google Cloud Storage full path '{gs_path}'! Format should be like 'gs://<bucket>/<subfolder>/'")
-        else:
-            subfolder = ""
-
-    # Clean subfolder into something it will not crash a method later
-    if len(subfolder) != 0 and not subfolder.endswith("/"):
-        subfolder += "/"
-
-    logger.debug(f"gs_pattern: '{gs_pattern}', bucket: '{bucket}', subfolder: '{subfolder}'")
-
-    # Check for valid path
-    if gs_pattern != "gs:":
-        logger.error(f"Invalid Google Cloud Storage full path '{gs_path}'!")
-        raise ValueError(f"Invalid Google Cloud Storage full path '{gs_path}'! Format should be like 'gs://<bucket>/<subfolder>/'")
-
-    return bucket, subfolder
-
-
 class GCloudStorageTool(object):
     """This class handle most of the interaction needed with Google Cloud Storage,
     so the base code becomes more readable and straightforward."""
@@ -63,7 +32,7 @@ class GCloudStorageTool(object):
         # Even if all parameters are set, it will overwrite the given bucket and subfolder parameters.
         # That means it will have a priority over the other parameters.
         if gs_path is not None:
-            bucket, subfolder = parse_gs_path(gs_path)
+            bucket, subfolder = parse_remote_uri(gs_path, "gs")
 
         # Getting credentials
         google_creds = fetch_credentials("Google")
@@ -104,7 +73,7 @@ class GCloudStorageTool(object):
         # Tries to parse as a gs path. If it fails, ignores this part
         # and doesn't change the value of remote_path parameter
         try:
-            bucket, blob = parse_gs_path(blob)
+            bucket, blob = parse_remote_uri(blob, "gs")
         except ValueError:
             pass
         else:
@@ -112,14 +81,14 @@ class GCloudStorageTool(object):
                 logger.warning("Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
                 print("WARNING: Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
 
-            # parse_gs_path() function adds a "/" after a subfolder.
+            # parse_remote_uri() function adds a "/" after a subfolder.
             # Since this is a file, the "/" must be removed.
             blob = blob[:-1]
 
         self.blob = self.bucket.blob(blob)
 
     def set_by_path(self, gs_path):
-        self.bucket_name, self.subfolder = parse_gs_path(gs_path)
+        self.bucket_name, self.subfolder = parse_remote_uri(gs_path, "gs")
 
     def get_gs_path(self):
         if self.blob is None:
@@ -259,7 +228,7 @@ class GCloudStorageTool(object):
             # Tries to parse as a S3 path. If it fails, ignores this part
             # and doesn't change the value of remote_path parameter
             try:
-                bucket, subfolder = parse_gs_path(remote_path)
+                bucket, subfolder = parse_remote_uri(remote_path, "gs")
             except ValueError:
                 pass
             else:
@@ -267,7 +236,7 @@ class GCloudStorageTool(object):
                     logger.warning("Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
                     print("WARNING: Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
 
-                # parse_gs_path() function adds a "/" after a subfolder.
+                # parse_remote_uri() function adds a "/" after a subfolder.
                 # Since this is a file, the "/" must be removed.
                 remote_path = subfolder[:-1]
 

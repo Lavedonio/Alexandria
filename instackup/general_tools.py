@@ -57,3 +57,39 @@ def unicode_to_ascii(unicode_string):
     """
     nfkd_form = unicodedata.normalize('NFKD', unicode_string.lower())
     return "".join([char for char in nfkd_form if not unicodedata.combining(char)])
+
+
+def parse_remote_uri(uri, service):
+    """Parses a Google Cloud Storage (GS) or an Amazon S3 path into bucket and subfolder(s).
+    Raises an error if path is with wrong format.
+
+    service parameter can be either "gs" or "s3"
+    """
+
+    service = service.lower()  # Ensuring standard
+
+    # If there isn't at least 3 "/" in the path, it will default to only set bucket name.
+    # If there isn't at least 2 "/" in the path, the path has a syntax error.
+    try:
+        uri_service, _, bucket, subfolder = uri.split("/", 3)
+    except ValueError:
+        try:
+            uri_service, _, bucket = uri.split("/", 2)
+        except ValueError:
+            logger.error(f"Invalid service type ({service}) in URI given '{uri}'!")
+            raise ValueError(f"Invalid service type ({service}) in URI given '{uri}'! Format should be like '{service}://<bucket>/<subfolder>/'")
+        else:
+            subfolder = ""
+
+    # Clean subfolder into something it will not crash a method later
+    if len(subfolder) != 0 and not subfolder.endswith("/"):
+        subfolder += "/"
+
+    logger.debug(f"uri_service: '{uri_service}', bucket: '{bucket}', subfolder: '{subfolder}'")
+
+    # Check for valid path
+    if uri_service[:-1] != service:
+        logger.error(f"Invalid service type ({service}) in URI given '{uri}'!")
+        raise ValueError(f"Invalid service type ({service}) in URI given '{uri}'! Format should be like '{service}://<bucket>/<subfolder>/'")
+
+    return bucket, subfolder
