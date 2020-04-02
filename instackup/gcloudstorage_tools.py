@@ -1,12 +1,13 @@
 import os
 import logging
+import pandas as pd
 from google.cloud import storage
-from .general_tools import fetch_credentials
+from instackup.general_tools import fetch_credentials
 
 
 # Logging Configuration
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s: %(message)s")
 
@@ -30,8 +31,8 @@ def parse_gs_path(gs_path):
         try:
             gs_pattern, _, bucket = gs_path.split("/", 2)
         except ValueError:
-            logger.error(f"Invalid S3 full path '{gs_path}'!")
-            raise ValueError(f"Invalid S3 full path '{gs_path}'! Format should be like 's3://<bucket>/<subfolder>/'")
+            logger.error(f"Invalid Google Cloud Storage full path '{gs_path}'!")
+            raise ValueError(f"Invalid Google Cloud Storage full path '{gs_path}'! Format should be like 'gs://<bucket>/<subfolder>/'")
         else:
             subfolder = ""
 
@@ -85,6 +86,7 @@ class GCloudStorageTool(object):
         self.client = storage_client
         self.bucket_name = bucket
         self.subfolder = subfolder
+        self.blob = None
 
     @property
     def bucket(self):
@@ -97,18 +99,103 @@ class GCloudStorageTool(object):
     def set_subfolder(self, subfolder):
         self.subfolder = subfolder
 
+    def set_blob(self, blob):
+
+        # Tries to parse as a gs path. If it fails, ignores this part
+        # and doesn't change the value of remote_path parameter
+        try:
+            bucket, blob = parse_gs_path(blob)
+        except ValueError:
+            pass
+        else:
+            if bucket != self.bucket_name:
+                logger.warning("Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
+                print("WARNING: Path given has different bucket than the one that is currently set. Ignoring bucket from path.")
+
+            # parse_gs_path() function adds a "/" after a subfolder.
+            # Since this is a file, the "/" must be removed.
+            blob = blob[:-1]
+
+        self.blob = self.bucket.blob(blob)
+
     def set_by_path(self, gs_path):
         self.bucket_name, self.subfolder = parse_gs_path(gs_path)
 
     def get_gs_path(self):
-        return f"gs://{self.bucket_name}/{self.subfolder}"
+        if self.blob is None:
+            return f"gs://{self.bucket_name}/{self.subfolder}"
+        else:
+            return f"gs://{self.bucket_name}/{self.blob.name}"
 
     def list_all_buckets(self):
         """Returns a list of all Buckets in Google Cloud Storage"""
 
-        return [bucket for bucket in self.client.list_buckets()]
+        return [self.get_bucket_info(bucket) for bucket in self.client.list_buckets()]
 
-    def list_bucket_contents(self, yield_results=False):
+    def get_bucket_info(self, bucket=None):
+        if bucket is None:
+            bucket = self.bucket
+
+        return {
+            'Name': bucket.name,
+            'TimeCreated': bucket._properties.get('timeCreated', ''),
+            'TimeUpdated': bucket._properties.get('updated', ''),
+            'OwnerID': '' if not bucket.owner else bucket.owner.get('entityId', '')
+        }
+
+    def list_bucket_attributes(self):
+        """A list of all curently supported bucket attributes that comes in get_bucket_info method return dictionary."""
+
+        return [
+            "Name",
+            "TimeCreated",
+            "TimeUpdated",
+            "OwnerID"
+        ]
+
+    def get_blob_info(self, blob=None, param=None):
+        """Converts a google.cloud.storage.Blob (which represents a storage object) to context format (GCS.BucketObject)."""
+        if blob is None:
+            blob = self.blob
+
+        blob_info = {
+            'Name': blob.name,
+            'Bucket': blob.bucket.name,
+            'ContentType': blob.content_type,
+            'TimeCreated': blob.time_created,
+            'TimeUpdated': blob.updated,
+            'TimeDeleted': blob.time_deleted,
+            'Size': blob.size,
+            'MD5': blob.md5_hash,
+            'OwnerID': '' if not blob.owner else blob.owner.get('entityId', ''),
+            'CRC32c': blob.crc32c,
+            'EncryptionAlgorithm': blob._properties.get('customerEncryption', {}).get('encryptionAlgorithm', ''),
+            'EncryptionKeySHA256': blob._properties.get('customerEncryption', {}).get('keySha256', ''),
+        }
+
+        if param is not None:
+            return blob_info[param]
+        return blob_info
+
+    def list_blob_attributes(self):
+        """A list of all curently supported bucket attributes that comes in get_blob_info method return dictionary."""
+
+        return [
+            'Name',
+            'Bucket',
+            'ContentType',
+            'TimeCreated',
+            'TimeUpdated',
+            'TimeDeleted',
+            'Size',
+            'MD5',
+            'OwnerID',
+            'CRC32c',
+            'EncryptionAlgorithm',
+            'EncryptionKeySHA256'
+        ]
+
+    def list_contents(self, yield_results=False):
         """Lists all files that correspond with bucket and subfolder set at the initialization.
         It can either return a list or yield a generator.
         Lists can be more familiar to use, but when dealing with large amounts of data,
@@ -120,20 +207,22 @@ class GCloudStorageTool(object):
         if yield_results:
             logger.debug("Yielding the results")
 
-            def list_bucket_contents_as_generator(self):
+            def list_contents_as_generator(self):
                 if self.subfolder == "":
                     logger.debug("No subfolder, yielding all files in bucket")
 
                     for blob in self.client.list_blobs(self.bucket_name):
-                        yield str(blob)
+                        yield self.get_blob_info(blob)
 
                 else:
                     logger.debug(f"subfolder '{self.subfolder}' found, yielding all matching files in bucket")
 
                     for blob in self.client.list_blobs(self.bucket_name, prefix=self.subfolder):
-                        yield str(blob)
+                        blob_dict = self.get_blob_info(blob)
+                        if blob_dict["Name"] != self.subfolder:
+                            yield blob_dict
 
-            return list_bucket_contents_as_generator(self)
+            return list_contents_as_generator(self)
 
         else:
             logger.debug("Listing the results")
@@ -144,13 +233,15 @@ class GCloudStorageTool(object):
                 logger.debug("No subfolder, listing all files in bucket")
 
                 for blob in self.client.list_blobs(self.bucket_name):
-                    contents.append(blob)
+                    contents.append(self.get_blob_info(blob))
 
             else:
                 logger.debug(f"subfolder '{self.subfolder}' found, listing all matching files in bucket")
 
                 for blob in self.client.list_blobs(self.bucket_name, prefix=self.subfolder):
-                    contents.append(blob)
+                    blob_dict = self.get_blob_info(blob)
+                    if blob_dict["Name"] != self.subfolder:
+                        contents.append(blob_dict)
 
             return contents
 
@@ -185,6 +276,72 @@ class GCloudStorageTool(object):
 
         blob.upload_from_filename(filename)
 
-    def download_file(self, remote_path, filename=None):
-        # Method still in development
+    def upload_subfolder(self, folder_path):
+        """Uploads a local folder to with prefix as currently set enviroment (bucket and subfolder).
+        Keeps folder structure as prefix in Google Cloud Storage.
+        Behaves as if it was downloading an entire folder to current path."""
+
+        # Still in development
         raise NotImplementedError
+
+    def download_file(self, fullfilename=None, replace=False):
+        """Downloads remote gs file to local path.
+
+        If the fullfilename parameter is not set, it will default to the currently set blob.
+
+        If replace is set to True and there is already a file downloaded with the same filename and path,
+        it will replace the file. Otherwise it will create a new file with a number attached to the end."""
+
+        if self.blob is None:
+            raise ValueError
+
+        if fullfilename is None:
+            fullfilename = self.get_blob_info(param="Name")
+
+        logger.debug(f"fullfilename: {fullfilename}")
+
+        path, filename = os.path.split(fullfilename)
+        logger.debug(f"Path: {path}")
+        logger.debug(f"Filename: {filename}")
+
+        # If this filename exists in this directory (yes, the one where this code lays), aborts the download
+        if filename in next(os.walk(os.getcwd()))[2]:
+            logger.error("File already exists at {}. Clean the folder to continue.".format(os.path.join(os.getcwd(), filename)))
+            raise FileExistsError("File already exists at {}. Clean the folder to continue.".format(os.path.join(os.getcwd(), filename)))
+
+        # Downloads the file
+        self.blob.download_to_filename(filename)
+
+        logger.info("Download to temporary location finished successfully")
+
+        # Move the downloaded file to specified directory
+        os.makedirs(path, exist_ok=True)
+        if os.path.exists(fullfilename) and not replace:
+            temp_path, ext = os.path.splitext(fullfilename)
+            i = 1
+            while os.path.exists(f"{temp_path}_copy_{i}{ext}"):
+                i += 1
+            fullfilename = f"{temp_path}_copy_{i}{ext}"
+            logger.info(f"File renamed to {fullfilename}")
+        os.replace(filename, fullfilename)
+
+        logger.info("File moved successfully")
+        print("Download finished successfully")
+
+    def download_subfolder(self):
+        """Downloads remote Storage files in currently set enviroment (bucket and subfolder).
+        Behaves as if it was downloading an entire folder to current path."""
+
+        # Still in development
+        raise NotImplementedError
+
+    def download_on_dataframe(self, sep=",", encoding="utf-8", decimal="."):
+        """Use blob information to download file and use it directly on a Pandas DataFrame
+        without having to save the file.
+        """
+
+        if self.blob is None:
+            raise ValueError
+
+        logger.debug(f"gs path: {self.get_gs_path()}")
+        return pd.read_csv(self.get_gs_path(), sep=sep, encoding=encoding, decimal=decimal)
