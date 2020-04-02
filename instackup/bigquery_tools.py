@@ -3,7 +3,7 @@ import logging
 from google.cloud import bigquery
 from google.cloud import bigquery_datatransfer_v1
 from google.protobuf.timestamp_pb2 import Timestamp
-from .general_tools import fetch_credentials
+from .general_tools import fetch_credentials, unicode_to_ascii
 
 
 # Logging Configuration
@@ -69,6 +69,21 @@ class BigQueryTool(object):
 
         return result
 
+    def clean_dataframe_columns(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789"):
+        """Replace dataframe columns to only contain chars allowed in BigQuery tables column name."""
+
+        column_map = {}
+        for raw_data in dataframe.columns:
+            ascii_data = unicode_to_ascii(raw_data.lower())
+            clean_data = "".join([x if x in allowed_chars else "_" for x in ascii_data])
+
+            # Column can't start with a number
+            if clean_data[0] in "0123456789":
+                clean_data = "_" + clean_data
+            column_map[raw_data] = clean_data
+
+        return dataframe.rename(column_map, axis=1)
+
     def upload(self, dataframe, dataset, table, if_exists='fail'):
         """Executes an insert SQL command into BigQuery
 
@@ -80,6 +95,8 @@ class BigQueryTool(object):
         Full documentation for Pandas export to BigQuery can be found here:
         https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
         """
+
+        dataframe = self.clean_dataframe_columns(dataframe)
 
         destination = dataset + "." + table
         dataframe.to_gbq(destination, chunksize=None, if_exists=if_exists)

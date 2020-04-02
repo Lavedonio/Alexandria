@@ -1,6 +1,7 @@
 import os
 import yaml
 import logging
+import unicodedata
 
 
 # Logging Configuration
@@ -46,3 +47,13 @@ def fetch_credentials(service_name, **kwargs):
         return secrets[service_name][second_kwarg]
     else:
         return secrets[service_name]
+
+
+def unicode_to_ascii(unicode_string):
+    """Replaces all non-ascii chars in string by the closest possible match.
+
+    This solution was inpired by this answer:
+    https://stackoverflow.com/a/517974/11981524
+    """
+    nfkd_form = unicodedata.normalize('NFKD', unicode_string.lower())
+    return "".join([char for char in nfkd_form if not unicodedata.combining(char)])
