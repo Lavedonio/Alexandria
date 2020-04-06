@@ -82,13 +82,15 @@ class BigQueryTool(object):
         dataframe[cols] = dataframe[cols].apply(pd.to_numeric, **kwargs)
         return dataframe
 
-    def clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789"):
-        """Replace dataframe columns to only contain chars allowed in BigQuery tables column name."""
+    def clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={}):
+        """Replace dataframe columns to only contain chars allowed in BigQuery tables column name.
+        special_treatment dictionary substitutes the terms in the keys by its value pair.
+        """
 
         column_map = {}
         for raw_data in dataframe.columns:
             ascii_data = unicode_to_ascii(raw_data.lower())
-            clean_data = "".join([x if x in allowed_chars else "_" for x in ascii_data])
+            clean_data = "".join([x if x in allowed_chars else "_" if special_treatment.get(x) is None else special_treatment[x] for x in ascii_data])
 
             # Column can't start with a number
             if clean_data[0] in "0123456789":
