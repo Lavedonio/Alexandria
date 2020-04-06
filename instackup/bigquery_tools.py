@@ -108,7 +108,7 @@ class BigQueryTool(object):
         https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
         """
 
-        dataframe = self.clean_dataframe_columns(dataframe)
+        dataframe = self.clean_dataframe_column_names(dataframe)
 
         logger.info("Starting upload...")
         destination = dataset + "." + table
