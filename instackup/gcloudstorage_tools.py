@@ -262,7 +262,7 @@ class GCloudStorageTool(object):
         it will replace the file. Otherwise it will create a new file with a number attached to the end."""
 
         if self.blob is None:
-            raise ValueError
+            raise ValueError("No file selected. Set it with set_blob method first.")
 
         if fullfilename is None:
             fullfilename = self.get_blob_info(param="Name")
@@ -304,13 +304,17 @@ class GCloudStorageTool(object):
         # Still in development
         raise NotImplementedError
 
-    def download_on_dataframe(self, sep=",", encoding="utf-8", decimal="."):
+    def download_on_dataframe(self, **kwargs):
         """Use blob information to download file and use it directly on a Pandas DataFrame
         without having to save the file.
+
+        **kwargs are passed directly to pandas.read_csv method.
+        The complete documentation of this method can be found here:
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
         """
 
         if self.blob is None:
-            raise ValueError
+            raise ValueError("No file selected. Set it with set_blob method first.")
 
         logger.debug(f"gs path: {self.get_gs_path()}")
-        return pd.read_csv(self.get_gs_path(), sep=sep, encoding=encoding, decimal=decimal)
+        return pd.read_csv(self.get_gs_path(), **kwargs)
