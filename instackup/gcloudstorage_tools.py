@@ -214,6 +214,18 @@ class GCloudStorageTool(object):
 
             return contents
 
+    def rename_file(self, new_filename, old_filename):
+        """Rename only filename from path key, so the final result is similar to rename a file."""
+
+        # Still in development
+        raise NotImplementedError
+
+    def rename_subfolder(self, new_subfolder):
+        """Renames all keys, so the final result is similar to rename a subfolder."""
+
+        # Still in development
+        raise NotImplementedError
+
     def upload_file(self, filename, remote_path=None):
         """Uploads file to remote path in Google Cloud Storage (GS).
 
@@ -318,3 +330,15 @@ class GCloudStorageTool(object):
 
         logger.debug(f"gs path: {self.get_gs_path()}")
         return pd.read_csv(self.get_gs_path(), **kwargs)
+
+    def delete_file(self):
+        """Deletes file in Google Cloud Storage."""
+
+        # Still in development
+        raise NotImplementedError
+
+    def delete_subfolder(self):
+        """Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder."""
+
+        # Still in development
+        raise NotImplementedError
