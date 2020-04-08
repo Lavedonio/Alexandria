@@ -55,7 +55,7 @@ def unicode_to_ascii(unicode_string):
     This solution was inpired by this answer:
     https://stackoverflow.com/a/517974/11981524
     """
-    nfkd_form = unicodedata.normalize('NFKD', unicode_string.lower())
+    nfkd_form = unicodedata.normalize('NFKD', unicode_string)
     return "".join([char for char in nfkd_form if not unicodedata.combining(char)])
 
 
