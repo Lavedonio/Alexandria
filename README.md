@@ -15,69 +15,64 @@ This Python library is an open source way to standardize and simplify connection
 - [Version log](https://github.com/Lavedonio/instackup#version-log)
 
 # Current release
-## Version 0.0.1 (alpha)
-First alpha release:
+## Version 0.0.2 (alpha)
+Second alpha release.
 
-Added modules:
-- bigquery_tools
-- general_tools
-- redshift_tools
-- s3_tools
-
-Inside those modules, these classes and functions/methods were added:
-- BigQueryTool
-  - \_\_init\_\_
-  - query
-  - upload
-  - start_transfer
-- fetch_credentials
-- RedShiftTool
-  - \_\_init\_\_
-  - connect
-  - commit
-  - rollback
-  - execute_sql
-  - query
-  - unload_to_S3
-  - close_connection
-  - \_\_enter\_\_
-  - \_\_exit\_\_
-- parse_s3_path
-- S3Tool
-  - \_\_init\_\_
-  - bucket @property
-  - set_bucket
-  - set_subfolder
-  - set_by_path
-  - get_s3_path
-  - rename_file
-  - rename_subfolder
-  - list_all_buckets
-  - list_contents
-  - upload_file
-  - download_file
-  - delete_file
-  - delete_subfolder
-
-Modules still in development:
+#### Added modules:
 - gcloudstorage_tools
 
-Inside this module, these classes and functions/methods are in development:
-- parse_gs_path
+Inside this module, these classes and functions/methods were added:
 - GCloudStorageTool
   - \_\_init\_\_
   - bucket @property
   - set_bucket
   - set_subfolder
+  - set_blob
   - set_by_path
   - get_gs_path
   - list_all_buckets
-  - list_bucket_contents
+  - get_bucket_info
+  - list_bucket_attributes
+  - get_blob_info
+  - list_blob_attributes
+  - list_contents
   - upload_file
   - download_file
-- S3Tool
-  - upload_subfolder
-  - download_subfolder
+  - download_on_dataframe
+
+#### New functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - convert_dataframe_to_numeric
+    - clean_dataframe_column_names
+- general_tools
+  - unicode_to_ascii
+  - parse_remote_uri
+
+#### Modified functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - upload
+
+#### Deleted functionalities:
+- gcloudstorage_tools
+  - parse_gs_path
+- s3_tools
+  - parse_s3_path
+
+#### Functionalities still in development:
+- gcloudstorage_tools
+  - GCloudStorageTool
+    - rename_file
+    - rename_subfolder
+    - upload_subfolder
+    - download_subfolder
+    - delete_file
+    - delete_subfolder
+- s3_tools
+  - S3Tool
+    - upload_subfolder
+    - download_subfolder
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -177,6 +172,7 @@ Usage example:
 ```
 from instackup.bigquery import BigQueryTool
 
+
 bq = BigQueryTool()
 ```
 
@@ -188,27 +184,77 @@ Usage example:
 import pandas as pd
 from instackup.bigquery import BigQueryTool
 
+
 bq = BigQueryTool()
 
 sql_query = """SELECT * FROM `project_name.dataset.table`"""
 df = bq.query(sql_query)
 ```
 
-#### upload(self, dataframe, dataset, table, if_exists='fail')
-Executes an insert SQL command into BigQuery
+#### convert_dataframe_to_numeric(dataframe, exclude_columns=[], \*\*kwargs)
+Transform all string type columns into floats, except those in exclude_columns list.
 
-if_exists can take 3 different arguments:
-- 'fail': If table exists, raises error.
-- 'replace': If table exists, drop it, recreate it, and insert data.
-- 'append': If table exists, insert data. Create if does not exist.
+\*\*kwargs are passed directly to pandas.to_numeric method.
+The complete documentation of this method can be found here:
+https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_numeric.html
 
-Full documentation for Pandas export to BigQuery can be found here:
+Usage example:
+```
+import pandas as pd
+from instackup.bigquery import BigQueryTool
+
+
+# You can often find these kind of data when reading from a file
+df = pd.DataFrame({"col.1": ["1", "2"], "col.2": ["3", "junk"], "col.3": ["string1", "string2"]})
+
+bq = BigQueryTool()
+df = bq.convert_dataframe_to_numeric(df, exclude_columns=["col.3"], errors="coerce")
+print(df)
+
+# output:
+#
+#    col.1  col.2    col.3
+# 0      1    3.0  string1
+# 1      2    NaN  string2
+```
+
+#### clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={})
+Replace dataframe columns to only contain chars allowed in BigQuery tables column name.
+
+special_treatment dictionary substitutes the terms in the keys by its value pair.
+
+Usage example:
+```
+import pandas as pd
+from instackup.bigquery import BigQueryTool
+
+
+# You can often find these kind of data when reading from a file
+df = pd.DataFrame({"col.1": ["1", "2"], "col.2": ["3", "junk"], "col.3!": ["string1", "string2"]})
+
+bq = BigQueryTool()
+df = bq.clean_dataframe_column_names(df, special_treatment={"!": "_factorial"})
+print(df)
+
+# output:
+#
+#   col_1 col_2 col_3_factorial
+# 0     1     3         string1
+# 1     2  junk         string2
+```
+
+#### upload(self, dataframe, dataset, table, \*\*kwargs)
+Prepare dataframe columns and executes an insert SQL command into BigQuery.
+
+\*\*kwargs are passed directly to pandas.to_gbq method.
+The complete documentation of this method can be found here:
 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
 
 Usage example:
 ```
 import pandas as pd
 from instackup.bigquery import BigQueryTool
+
 
 fixed_data = {
   'col1': [1, 2],
@@ -232,6 +278,7 @@ Usage example:
 ```
 from instackup.bigquery import BigQueryTool
 
+
 transfer_config = "projects/000000000000/transferConfigs/00000000-0000-0000-0000-000000000000"
 
 use_project_path = True
@@ -247,7 +294,282 @@ print(f"Transfer status: {state_response}")
 ```
 
 ## gcloudstorage_tools
-*To be defined...*
+### GCloudStorageTool
+This class handle most of the interaction needed with Google Cloud Storage,
+so the base code becomes more readable and straightforward.
+
+#### \_\_init\_\_(self, bucket=None, subfolder="", gs_path=None)
+Takes a either gs_path or both bucket name and subfolder name as parameters to set the current working directory. It also opens a connection with Google Cloud Storage.
+
+The paradigm of this class is that all the operations are done in the current working directory, so it is important to set the right path (you can reset it later, but still).
+
+Usage example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+# or
+
+gs = GCloudStorageTool(bucket="some_other_bucket", subfolder="some_subfolder/subpath/")
+```
+
+#### bucket(self) @property
+Returns the bucket object from the client based on the bucket name given in \_\_init\_\_ or set_bucket
+
+#### set_bucket(self, bucket)
+Takes a string as a parameter to reset the bucket name and bucket object. It has no return value.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+gs.set_bucket("some_other_bucket")
+
+# Check new path structure
+print(gs.get_gs_path())
+```
+
+#### set_subfolder(self, subfolder)
+Takes a string as a parameter to reset the subfolder name. It has no return value.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+gs.set_subfolder("some/more_complex/subfolder/structure/")
+
+# Check new path structure
+print(gs.get_gs_path())
+```
+
+#### set_by_path(self, s3_path)
+Takes a string as a parameter to reset the bucket name and subfolder name by its GS path. It has no return value.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+gs.set_by_path("gs://some_other_bucket/some/more_complex/subfolder/structure/")
+
+# Check new path structure
+print(gs.get_gs_path())
+```
+
+#### get_gs_path(self)
+Returns a string containing the GS path for the currently set bucket and subfolder. It takes no parameter.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+print(gs.get_gs_path())
+```
+
+#### list_all_buckets(self)
+Returns a list of all Buckets in Google Cloud Storage. It takes no parameter.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+# Setting or not a subfolder doesn't change the output of this function
+gs = GCloudStorageTool(bucket="some_bucket")
+
+all_buckets = gs.list_all_buckets()
+
+# some code here
+```
+
+#### get_bucket_info(self, bucket=None)
+Returns a dictionary with the information of Name, Datetime Created, Datetime Updated and Owner ID
+of the currently selected bucket (or the one passed in the parameters).
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket")
+
+bucket_info = gs.get_bucket_info()
+print(bucket_info)
+```
+
+#### list_bucket_attributes(self)
+A list of all curently supported bucket attributes that comes in get_bucket_info method return dictionary.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket")
+
+bucket_info_attributes = gs.list_bucket_attributes()
+print(bucket_info_attributes)
+```
+
+#### get_blob_info(self)
+Converts a google.cloud.storage.Blob (which represents a storage object) to context format (GCS.BucketObject).
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket", subfolder="some_subfolder")
+gs.set_blob("some_subfolder/file.csv")
+
+blob_info_attributes = gs.get_blob_info()
+print(blob_info_attributes)
+```
+
+#### list_blob_attributes(self)
+A list of all curently supported bucket attributes that comes in get_blob_info method return dictionary.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket")
+gs.set_blob("some_subfolder/file.csv")
+
+blob_info_attributes = gs.list_blob_attributes()
+print(blob_info_attributes)
+```
+
+#### list_contents(self, yield_results=False):
+Lists all files that correspond with bucket and subfolder set at the initialization.
+
+It can either return a list or yield a generator. Lists can be more familiar to use, but when dealing with large amounts of data, yielding the results may be a better option in terms of efficiency.
+
+For more information on how to use generators and yield, check this video:
+https://www.youtube.com/watch?v=bD05uGo_sVI
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+path_contents = gs.list_contents()
+
+if len(path_contents) == 0:
+    s3.set_subfolder("logs/subfolder/")
+
+    # When a specific bucket/ bucket + subfolder contains a lot of data,
+    # that's when yielding the results may be more efficient.
+    for file in gs.list_contents(yield_results=True):
+        # Do something
+
+# some code here
+```
+
+#### rename_file(self, new_filename, old_filename)
+Not implemented.
+
+#### rename_subfolder(self, new_subfolder)
+Not implemented.
+
+#### upload_file(self, filename, remote_path=None)
+Uploads file to remote path in Google Cloud Storage (GS).
+
+remote_path can take either a full GS path or a subfolder only one.
+
+If the remote_path parameter is not set, it will default to whatever subfolder
+is set in instance of the class plus the file name that is being uploaded.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+file_location = "C:\\Users\\USER\\Desktop\\file.csv"
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+# upload_file method accepts all 3 options
+gs.upload_file(file_location)
+gs.upload_file(file_location, "gs://some_bucket/other_subfolder/")
+gs.upload_file(file_location, "another_subfolder/")  # Just subfolder
+```
+
+#### upload_subfolder(self, folder_path)
+Not implemented.
+
+#### download_file(self, fullfilename=None, replace=False)
+Downloads remote gs file to local path.
+
+If the fullfilename parameter is not set, it will default to the currently set blob.
+
+If replace is set to True and there is already a file downloaded with the same filename and path,
+it will replace the file. Otherwise it will create a new file with a number attached to the end.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+file_location = "gs://some_bucket/other_subfolder/"
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+# download_file method accepts both options
+gs.download_file(file_location)
+gs.download_file(file_location, "C:\\Users\\USER\\Desktop\\file.csv")
+```
+
+#### download_subfolder(self)
+Not implemented.
+
+#### download_on_dataframe(self, \*\*kwargs)
+Use blob information to download file and use it directly on a Pandas DataFrame
+without having to save the file.
+
+\*\*kwargs are passed directly to pandas.read_csv method.
+The complete documentation of this method can be found here:
+https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+file_location = "gs://some_bucket/other_subfolder/"
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+# For a well behaved file, you may just use the method directly
+gs.set_blob("subfolder/file.csv")
+df = gs.download_on_dataframe()
+
+# For a file with a weird layout, you may want to use some parameters to save some time in data treatment
+gs.set_blob("subfolder/weird_file.csv")
+df = gs.download_on_dataframe(sep=";", encoding="ISO-8859-1", decimal=",")
+```
+
+#### delete_file(self)
+Not implemented.
+
+#### delete_subfolder(self)
+Not implemented.
 
 ## general_tools
 ### fetch_credentials(service_name, \*\*kwargs)
@@ -263,6 +585,50 @@ print(fetch_credentials(service_name="Google"))
 print(fetch_credentials("AWS"))
 print(fetch_credentials("RedShift", connection_type="cluster_credentials"))
 print(fetch_credentials("credentials_path"))
+```
+
+### unicode_to_ascii(unicode_string)
+Replaces all non-ascii chars in string by the closest possible match.
+
+This solution was inpired by this answer:
+https://stackoverflow.com/a/517974/11981524
+
+Usage example:
+```
+from instackup.general_tools import unicode_to_ascii
+
+
+raw_data = "ÑÇÀÁÂÃÈÉÊÍÒÓÔÙÚ ñçàáâãèéêíòóôùú"
+ascii_data = unicode_to_ascii(raw_data)
+
+print(ascii_data)  # output: >>> ncaaaaeeeiooouu ncaaaaeeeiooouu
+```
+
+### parse_remote_uri(uri, service)
+Parses a Google Cloud Storage (GS) or an Amazon S3 path into bucket and subfolder(s).
+Raises an error if path is with wrong format.
+
+service parameter can be either "gs" or "s3"
+
+Usage example:
+```
+from instackup.general_tools import parse_remote_uri
+
+
+### S3
+s3_path = "s3://some_bucket/subfolder/"
+bucket_name, subfolder = parse_remote_uri(s3_path, "s3")
+
+print(f"Bucket name: {bucket_name}")  # output: >>> some_bucket
+print(f"Subfolder: {subfolder}")      # output: >>> subfolder
+
+
+### Storage
+gs_path = "gs://some_bucket/subfolder/"
+bucket_name, subfolder = parse_remote_uri(gs_path, "gs")
+
+print(f"Bucket name: {bucket_name}")  # output: >>> some_bucket
+print(f"Subfolder: {subfolder}")      # output: >>> subfolder
 ```
 
 ## redshift_tools
@@ -566,24 +932,6 @@ with RedShiftTool() as rs:
 ```
 
 ## s3_tools
-### parse_s3_path(s3_path)
-Parses a S3 path (s3_path parameter) into bucket and subfolder(s) and returns its values.
-
-Raises an error if S3 path is with wrong format.
-
-Usage example:
-```
-from instackup.s3_tools import parse_s3_path
-
-
-s3_path = "s3://some_bucket/subfolder/"
-
-bucket_name, subfolder = parse_s3_path()
-
-print(f"Bucket name: {bucket_name}")
-print(f"Subfolder: {subfolder}")
-```
-
 ### S3Tool
 This class handle most of the interaction needed with S3,
 so the base code becomes more readable and straightforward.
@@ -680,22 +1028,6 @@ s3.set_by_path("s3://some_other_bucket/some/more_complex/subfolder/structure/")
 print(s3.get_s3_path())
 ```
 
-#### set_by_path(self, s3_path)
-Takes a string as a parameter to reset the bucket name and subfolder name by its S3 path. It has no return value.
-
-Usage Example:
-```
-from instackup.s3_tools import S3Tool
-
-
-s3 = S3Tool(s3_path="s3://some_bucket/subfolder/")
-
-s3.set_by_path("s3://some_other_bucket/some/more_complex/subfolder/structure/")
-
-# Check new path structure
-print(s3.get_s3_path())
-```
-
 #### get_s3_path(self)
 Returns a string containing the S3 path for the currently set bucket and subfolder. It takes no parameter.
 
@@ -747,9 +1079,9 @@ Usage Example:
 from instackup.s3_tools import S3Tool
 
 
+# Setting or not a subfolder doesn't change the output of this function
 s3 = S3Tool(bucket="some_bucket")
 
-# Setting or not a subfolder doesn't change the output of this function
 all_buckets = s3.list_all_buckets()
 
 # some code here
@@ -822,14 +1154,14 @@ Usage Example:
 from instackup.s3_tools import S3Tool
 
 
-file_location = "C:\\Users\\USER\\Desktop\\file.csv"
+file_desired_location = "C:\\Users\\USER\\Desktop\\file.csv"
+remote_location = "s3://some_bucket/other_subfolder/file.csv"
 
 s3 = S3Tool(s3_path="s3://some_bucket/subfolder/")
 
-# upload_file method accepts all 3 options
-s3.upload_file(file_location)
-s3.upload_file(file_location, "s3://some_bucket/other_subfolder/")
-s3.upload_file(file_location, "another_subfolder/")  # Just subfolder
+# download_file method accepts both options
+s3.download_file(remote_location)
+s3.download_file(remote_location, file_desired_location)
 ```
 
 #### download_subfolder(self)
@@ -880,6 +1212,65 @@ print(s3.get_s3_path())
 
 # Version log
 See what changed in every version.
+
+### Version 0.0.2 (alpha)
+Second alpha release.
+
+#### Added modules:
+- gcloudstorage_tools
+
+Inside this module, these classes and functions/methods were added:
+- GCloudStorageTool
+  - \_\_init\_\_
+  - bucket @property
+  - set_bucket
+  - set_subfolder
+  - set_blob
+  - set_by_path
+  - get_gs_path
+  - list_all_buckets
+  - get_bucket_info
+  - list_bucket_attributes
+  - get_blob_info
+  - list_blob_attributes
+  - list_contents
+  - upload_file
+  - download_file
+  - download_on_dataframe
+
+#### New functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - convert_dataframe_to_numeric
+    - clean_dataframe_column_names
+- general_tools
+  - unicode_to_ascii
+  - parse_remote_uri
+
+#### Modified functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - upload
+
+#### Deleted functionalities:
+- gcloudstorage_tools
+  - parse_gs_path
+- s3_tools
+  - parse_s3_path
+
+#### Functionalities still in development:
+- gcloudstorage_tools
+  - GCloudStorageTool
+    - rename_file
+    - rename_subfolder
+    - upload_subfolder
+    - download_subfolder
+    - delete_file
+    - delete_subfolder
+- s3_tools
+  - S3Tool
+    - upload_subfolder
+    - download_subfolder
 
 ### Version 0.0.1 (alpha)
 First alpha release:
