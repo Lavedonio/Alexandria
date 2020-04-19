@@ -33,7 +33,7 @@ setuptools.setup(
         'boto3',
         'google-cloud-bigquery',
         'google-cloud-bigquery-datatransfer',
-        'google-cloud-storage',
+        'google-cloud-storage>=1.18.0',
         'gcsfs',
         'pandas',
         'psycopg2',
