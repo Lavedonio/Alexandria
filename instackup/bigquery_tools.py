@@ -153,6 +153,35 @@ class BigQueryTool(object):
         else:
             raise ValueError("Invalid return type. Valid options are 'dict', 'list' or 'dataframe'.")
 
+    def get_table_schema(self, dataset, table):
+        """Gets schema information and returns a properly formatted dictionary."""
+
+        schema = {
+            "fields": []
+        }
+
+        table_ref = self.client.dataset(dataset).table(table)
+        table = self.client.get_table(table_ref)
+        schema_fields = table.schema
+
+        for schema_field in schema_fields:
+            column_schema = {}
+
+            # Required fields
+            column_schema["name"] = schema_field.name
+            column_schema["type"] = schema_field.field_type
+            column_schema["mode"] = schema_field.mode
+
+            # Only added if contains relevant information
+            if schema_field.description is not None:
+                column_schema["description"] = schema_field.description
+            if len(schema_field.fields) > 0:
+                column_schema["fields"] = schema_field.fields
+
+            schema["fields"].append(column_schema)
+
+        return schema
+
     def convert_dataframe_to_numeric(dataframe, exclude_columns=[], **kwargs):
         """Transform all string type columns into floats, except those in exclude_columns list.
 
