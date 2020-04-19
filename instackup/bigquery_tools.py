@@ -83,6 +83,10 @@ class BigQueryTool(object):
         get parameter can be a string or list of strings. If only a string is passed,
         will return a list of values of that attribute of all tables
         (this case overrides return_type parameter).
+        Valid parameters are:
+        ["clustering_fields", "created", "dataset_id", "expires", "friendly_name",
+        "full_table_id", "labels", "partition_expiration", "partitioning_type", "project",
+        "reference", "table_id", "table_type", "time_partitioning", "view_use_legacy_sql"]
 
         return_type parameter can be 1 out of 3 types and sets how the result will be returned:
         - dict: dictionary of lists, i.e., each key has a list of all tables values for that attribute.
