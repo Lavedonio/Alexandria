@@ -343,7 +343,7 @@ class BigQueryTool(object):
         start_time = time.time()
 
         load_job.result()  # Waits for table load to complete.
-        print("Job finished at {total_time:.2f} seconds.".format(total_time=time.time() - start_time))
+        print("Job finished in {total_time:.2f} seconds.".format(total_time=time.time() - start_time))
 
     def upload_from_file(self, dataset, table, file_location, file_format="CSV",
                          header_rows=1, delimiter=",", encoding="UTF-8",
@@ -396,7 +396,7 @@ class BigQueryTool(object):
         start_time = time.time()
 
         load_job.result()  # Waits for table load to complete.
-        print("Job finished at {total_time:.2f} seconds.".format(total_time=time.time() - start_time))
+        print("Job finished in {total_time:.2f} seconds.".format(total_time=time.time() - start_time))
 
     def start_transfer(self, project_path=None, project_name=None, transfer_name=None):
         """Trigger a transfer to start executing in BigQuery Transfer.
