@@ -72,6 +72,64 @@ class BigQueryTool(object):
 
         return result
 
+    def query_and_save_results(self, sql_query, dest_dataset, dest_table, writing_mode="TRUNCATE", create_table_if_needed=False):
+        """Executes a query and saves the result in a table.
+
+        writing_mode parameter determines how the data is going to be written in BigQuery.
+        Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'TRUNCATE'):
+        - APPEND: If the table already exists, BigQuery appends the data to the table.
+        - EMPTY: If the table already exists and contains data, a 'duplicate' error
+                 is returned in the job result.
+        - TRUNCATE: If the table already exists, BigQuery overwrites the table data.
+
+        If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
+        Dafaults to False.
+        """
+
+        # Job preparation
+        job_config = bigquery.QueryJobConfig()
+
+        # Setting query destination table
+        table_ref = self.client.dataset(dest_dataset).table(dest_table)
+        job_config.destination = table_ref
+
+        # Checking whether table exists and, if not and create_table_if_needed is set to False, raises an error.
+        try:
+            table_exists = self.client.get_table(table_ref)
+            assert table_exists
+        except (NotFound, AssertionError) as err:
+            if create_table_if_needed:
+                table_exists = None
+            elif dest_dataset not in self.list_datasets():
+                logger.error("Dataset doesn't exist.")
+                raise err
+            else:
+                logger.error("Table doesn't exist.")
+                raise err
+
+        # If table exists, sets the writing_mode
+        if table_exists:
+            write_disposition = {
+                "APPEND": bigquery.WriteDisposition.WRITE_APPEND,
+                "EMPTY": bigquery.WriteDisposition.WRITE_EMPTY,
+                "TRUNCATE": bigquery.WriteDisposition.WRITE_TRUNCATE,
+            }
+
+            try:
+                job_config.write_disposition = write_disposition[writing_mode.upper()]
+            except ValueError:
+                available_modes = list(write_disposition.keys())
+                raise ValueError(f"Unsupported writing_mode {writing_mode}. Formats available: {available_modes}")
+
+        # Job execution
+        query_job = self.client.query(sql_query, job_config=job_config)  # API request
+
+        print("Starting job {}".format(query_job.job_id))
+        start_time = time.time()
+
+        query_job.result()  # Waits for query and save results to complete.
+        print("Job finished in {total_time:.2f} seconds.".format(total_time=time.time() - start_time))
+
     def list_datasets(self):
         """Returns a list with all dataset names inside the project."""
 
@@ -347,7 +405,7 @@ class BigQueryTool(object):
         Defaults to 'UTF-8'.
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
-        Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
+        Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'APPEND'):
         - APPEND: If the table already exists, BigQuery appends the data to the table.
         - EMPTY: If the table already exists and contains data, a 'duplicate' error
                  is returned in the job result.
@@ -399,7 +457,7 @@ class BigQueryTool(object):
         Defaults to 'UTF-8'.
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
-        Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
+        Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'APPEND'):
         - APPEND: If the table already exists, BigQuery appends the data to the table.
         - EMPTY: If the table already exists and contains data, a 'duplicate' error
                  is returned in the job result.
