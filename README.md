@@ -15,50 +15,18 @@ This Python library is an open source way to standardize and simplify connection
 - [Version log](https://github.com/Lavedonio/instackup#version-log)
 
 # Current release
-## Version 0.0.2 (alpha)
-Second alpha release.
-
-#### Added modules:
-- gcloudstorage_tools
-
-Inside this module, these classes and functions/methods were added:
-- GCloudStorageTool
-  - \_\_init\_\_
-  - bucket @property
-  - set_bucket
-  - set_subfolder
-  - set_blob
-  - set_by_path
-  - get_gs_path
-  - list_all_buckets
-  - get_bucket_info
-  - list_bucket_attributes
-  - get_blob_info
-  - list_blob_attributes
-  - list_contents
-  - upload_file
-  - download_file
-  - download_on_dataframe
+## Version 0.0.3 (alpha)
+Third alpha release.
 
 #### New functionalities:
 - bigquery_tools
   - BigQueryTool
-    - convert_dataframe_to_numeric
-    - clean_dataframe_column_names
-- general_tools
-  - unicode_to_ascii
-  - parse_remote_uri
-
-#### Modified functionalities:
-- bigquery_tools
-  - BigQueryTool
-    - upload
-
-#### Deleted functionalities:
-- gcloudstorage_tools
-  - parse_gs_path
-- s3_tools
-  - parse_s3_path
+    - list_datasets
+    - list_tables_in_dataset
+    - get_table_schema
+    - \_\_job_preparation_file_upload (private method)
+    - upload_from_gcs
+    - upload_from_file
 
 #### Functionalities still in development:
 - gcloudstorage_tools
@@ -170,7 +138,7 @@ Initialization takes no parameter and has no return value. It sets the bigquery 
 
 Usage example:
 ```
-from instackup.bigquery import BigQueryTool
+from instackup.bigquery_tools import BigQueryTool
 
 
 bq = BigQueryTool()
@@ -182,13 +150,89 @@ Run a SQL query and return the results as a Pandas Dataframe.
 Usage example:
 ```
 import pandas as pd
-from instackup.bigquery import BigQueryTool
+from instackup.bigquery_tools import BigQueryTool
 
 
 bq = BigQueryTool()
 
 sql_query = """SELECT * FROM `project_name.dataset.table`"""
 df = bq.query(sql_query)
+```
+
+#### list_datasets(self)
+Returns a list with all dataset names inside the project.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+bq = BigQueryTool()
+
+datasets = bq.list_datasets()
+
+print("There are {num} datasets, which are listed bellow:\n".format(num=len(datasets)))
+for ds in datasets:
+    print(ds)
+```
+
+#### list_tables_in_dataset(self, dataset, get=None, return_type="dict")
+Lists all tables inside a dataset. Will fail if dataset doesn't exist.
+
+get parameter can be a string or list of strings. If only a string is passed,
+will return a list of values of that attribute of all tables
+(this case overrides return_type parameter).
+
+Valid get parameters are:
+["clustering_fields", "created", "dataset_id", "expires", "friendly_name",
+"full_table_id", "labels", "partition_expiration", "partitioning_type", "project",
+"reference", "table_id", "table_type", "time_partitioning", "view_use_legacy_sql"]
+
+return_type parameter can be 1 out of 3 types and sets how the result will be returned:
+- dict: dictionary of lists, i.e., each key has a list of all tables values for that attribute.
+        The same index for different attibutes refer to the same table;
+- list: list of dictionaries, i.e., each item in the list is a dictionary with all the attributes
+        of the respective table;
+- dataframe: Pandas DataFrame.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+bq = BigQueryTool()
+
+dataset = "dataset"  # Enter a valid dataset name
+
+tables = bq.list_tables_in_dataset(dataset, get="table_id")  # Getting only table name
+
+print("There are {num} tables in {ds}, which are listed bellow:\n".format(num=len(tables), ds=dataset))
+for tb in tables:
+    print(tb)
+
+# Getting all table info
+df = bq.list_tables_in_dataset(dataset, return_type="dataframe")
+print(df)
+```
+
+#### get_table_schema(self, dataset, table)
+Gets schema information and returns a properly formatted dictionary.
+
+Usage example:
+```
+import json
+from instackup.bigquery_tools import BigQueryTool
+
+
+bq = BigQueryTool()
+
+dataset = "dataset"  # Enter a valid dataset name
+table = "table"      # Enter a valid table name
+
+schema = bq.get_table_schema(dataset, table)
+
+with open('data.json', 'w') as fp:
+    json.dump(schema, fp, sort_keys=True, indent=4)
 ```
 
 #### convert_dataframe_to_numeric(dataframe, exclude_columns=[], \*\*kwargs)
@@ -201,7 +245,7 @@ https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_numeric.htm
 Usage example:
 ```
 import pandas as pd
-from instackup.bigquery import BigQueryTool
+from instackup.bigquery_tools import BigQueryTool
 
 
 # You can often find these kind of data when reading from a file
@@ -226,7 +270,7 @@ special_treatment dictionary substitutes the terms in the keys by its value pair
 Usage example:
 ```
 import pandas as pd
-from instackup.bigquery import BigQueryTool
+from instackup.bigquery_tools import BigQueryTool
 
 
 # You can often find these kind of data when reading from a file
@@ -253,7 +297,7 @@ https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_g
 Usage example:
 ```
 import pandas as pd
-from instackup.bigquery import BigQueryTool
+from instackup.bigquery_tools import BigQueryTool
 
 
 fixed_data = {
@@ -270,13 +314,115 @@ bq = BigQueryTool()
 bq.upload(df, dataset, table)
 ```
 
+#### upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)
+Uploads data from Google Cloud Storage directly to BigQuery.
+
+dataset and table parameters determines the destination of the upload.
+gs_path parameter is the file location in Google Cloud Storage.
+All 3 of them are required string parameters.
+
+file_format can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
+header_rows, delimiter and encoding are only used when file_format is 'CSV'.
+
+header_rows parameter determine the length in rows of the 'CSV' file given.
+Should be 0 if there are no headers in the file. Defaults to 1.
+
+delimiter determines the string character used to delimite the data. Defaults to ','.
+
+encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
+Defaults to 'UTF-8'.
+
+writing_mode parameter determines how the data is going to be written in BigQuery.
+Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
+- APPEND: If the table already exists, BigQuery appends the data to the table.
+- EMPTY: If the table already exists and contains data, a 'duplicate' error
+         is returned in the job result.
+- TRUNCATE: If the table already exists, BigQuery overwrites the table data.
+
+If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
+Dafaults to False.
+
+schema is either a list of dictionaries containing the schema information or
+a dictionary encapsulating the previous list with a key of 'fields'.
+This latter format can be found when directly importing the schema info from a JSON generated file.
+If the file_format is either 'CSV' or 'JSON' or the table already exists, it can be ommited.
+
+Usage example:
+```
+import json
+from instackup.bigquery_tools import BigQueryTool
+
+
+# Enter valid values here
+dataset = "sandbox"
+table = "test"
+gs_path = "gs://some-bucket/some-subfolder/test.json"
+
+# schema must be in the same format of the output of get_table_schema method.
+with open('data.json', 'r') as fp:
+    schema = json.load(fp)
+
+bq.upload_from_gcs(dataset, table, gs_path, file_format="JSON", create_table_if_needed=True, schema=schema)
+```
+
+#### upload_from_file(self, dataset, table, file_location, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)
+Uploads data from a local file to BigQuery.
+
+dataset and table parameters determines the destination of the upload.
+file_location parameter is either the file full or relative path in the local computer.
+All 3 of them are required string parameters.
+
+file_format can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
+header_rows, delimiter and encoding are only used when file_format is 'CSV'.
+
+header_rows parameter determine the length in rows of the 'CSV' file given.
+Should be 0 if there are no headers in the file. Defaults to 1.
+
+delimiter determines the string character used to delimite the data. Defaults to ','.
+
+encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
+Defaults to 'UTF-8'.
+
+writing_mode parameter determines how the data is going to be written in BigQuery.
+Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
+- APPEND: If the table already exists, BigQuery appends the data to the table.
+- EMPTY: If the table already exists and contains data, a 'duplicate' error
+         is returned in the job result.
+- TRUNCATE: If the table already exists, BigQuery overwrites the table data.
+
+If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
+Dafaults to False.
+
+schema is either a list of dictionaries containing the schema information or
+a dictionary encapsulating the previous list with a key of 'fields'.
+This latter format can be found when directly importing the schema info from a JSON generated file.
+If the file_format is either 'CSV' or 'JSON' or the table already exists, it can be ommited.
+
+Usage example:
+```
+import json
+from instackup.bigquery_tools import BigQueryTool
+
+
+# Enter valid values here
+dataset = "sandbox"
+table = "test"
+file_location = "test.csv"
+
+# schema must be in the same format of the output of get_table_schema method.
+with open('data.json', 'r') as fp:
+    schema = json.load(fp)
+
+bq.upload_from_file(dataset, table, file_location, create_table_if_needed=True, schema=schema)
+```
+
 #### start_transfer(self, project_path=None, project_name=None, transfer_name=None)
 Takes a project path or both project name and transfer name to trigger a transfer to start executing in BigQuery Transfer. Returns a status indicating if the request was processed (if it does, the response should be 'PENDING').
 API documentation: https://googleapis.dev/python/bigquerydatatransfer/latest/gapic/v1/api.html
 
 Usage example:
 ```
-from instackup.bigquery import BigQueryTool
+from instackup.bigquery_tools import BigQueryTool
 
 
 transfer_config = "projects/000000000000/transferConfigs/00000000-0000-0000-0000-000000000000"
@@ -1212,6 +1358,33 @@ print(s3.get_s3_path())
 
 # Version log
 See what changed in every version.
+
+### Version 0.0.3 (alpha)
+Third alpha release.
+
+#### New functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - list_datasets
+    - list_tables_in_dataset
+    - get_table_schema
+    - \_\_job_preparation_file_upload (private method)
+    - upload_from_gcs
+    - upload_from_file
+
+#### Functionalities still in development:
+- gcloudstorage_tools
+  - GCloudStorageTool
+    - rename_file
+    - rename_subfolder
+    - upload_subfolder
+    - download_subfolder
+    - delete_file
+    - delete_subfolder
+- s3_tools
+  - S3Tool
+    - upload_subfolder
+    - download_subfolder
 
 ### Version 0.0.2 (alpha)
 Second alpha release.
