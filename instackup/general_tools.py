@@ -1,4 +1,5 @@
 import os
+import json
 import yaml
 import logging
 import unicodedata
@@ -36,9 +37,15 @@ def fetch_credentials(service_name, **kwargs):
     if service_name == "credentials_path":
         return os.path.dirname(secrets_path)
 
+    # If file extension is ".json", tries to read as a JSON. If not, tries to read as a YAML file.
+    _, file_extension = os.path.splitext(secrets_path)
+
     # Retrieving secrets from file
     with open(secrets_path, "r") as stream:
-        secrets = yaml.safe_load(stream)
+        if file_extension.lower() == ".json":
+            secrets = json.load(stream)
+        else:
+            secrets = yaml.safe_load(stream)
 
     # Variable connection_type is mainly for RedShift, since it has 2 ways of connecting to the database.
     # Variable dictionary is for BigQuery project name/id dictionaries.
