@@ -15,18 +15,17 @@ This Python library is an open source way to standardize and simplify connection
 - [Version log](https://github.com/Lavedonio/instackup#version-log)
 
 # Current release
-## Version 0.0.3 (alpha)
-Third alpha release.
+## Version 0.0.4 (alpha)
+Fourth alpha release.
 
 #### New functionalities:
 - bigquery_tools
   - BigQueryTool
-    - list_datasets
-    - list_tables_in_dataset
-    - get_table_schema
-    - \_\_job_preparation_file_upload (private method)
-    - upload_from_gcs
-    - upload_from_file
+    - query_and_save_results
+
+#### Modified functionalities:
+- general_tools
+  - fetch_credentials
 
 #### Functionalities still in development:
 - gcloudstorage_tools
@@ -44,13 +43,13 @@ Third alpha release.
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
-2. Create a YAML file with credentials information;
+2. Create a YAML (or JSON) file with credentials information;
 3. [Optional but recommended] Configure an Environment Variable that points where the Credentials file is.
 
 ### 1. Have a Python 3.6 version or superior installed
 Got to this [link](https://www.python.org/downloads/) e download the most current version that is compatible with this package.
 
-### 2. Create a YAML file with credentials information
+### 2. Create a YAML (or JSON) file with credentials information
 
 Use the files [secret_template.yml](https://github.com/Lavedonio/instackup/blob/master/credentials/secret_template.yml) or [secret_blank.yml](https://github.com/Lavedonio/instackup/blob/master/credentials/secret_blank.yml) as a base or copy and paste the code bellow and modify its values to the ones in your credentials/projects:
 
@@ -81,7 +80,7 @@ BigQuery:
 
 AWS:
   access_key: AWSAWSAWSAWSAWSAWSAWS
-  secret_key: ÇçasldUYkfsadçSDadskfDSDAsdUYalf
+  secret_key: CcasldUYkfsadcSDadskfDSDAsdUYalf
 
 RedShift:
   cluster_credentials:
@@ -99,25 +98,27 @@ RedShift:
 ```
 Save this file with `.yml` extension in a folder where you know the path won't be modified, like the Desktop folder (Example: `C:\Users\USER\Desktop\Credentials\secret.yml`).
 
+If you prefer, you can follow this step using a JSON file instead. Follow the same instructions but using `.json` instead of `.yml`.
+
 ### 3. [Optional but recommended] Configure an Environment Variable that points where the Credentials file is.
 
 To configure the Environment Variable, follow the instructions bellow, based on your Operating System.
 
 #### Windows
-1. Place the YAML file in a folder you won't change its name or path later;
+1. Place the YAML (or JSON) file in a folder you won't change its name or path later;
 2. In Windows Search, type `Environment Variables` and click in the Control Panel result;
 3. Click on the button `Environment Variables...`;
 4. In **Environment Variables**, click on the button `New`;
-5. In **Variable name** type `CREDENTIALS_HOME` and in **Variable value** paste the full path to the recently created YAML file;
+5. In **Variable name** type `CREDENTIALS_HOME` and in **Variable value** paste the full path to the recently created YAML (or JSON) file;
 6. Click **Ok** in the 3 open windows.
 
 #### Linux/MacOS
-1. Place the YAML file in a folder you won't change its name or path later;
+1. Place the YAML (or JSON) file in a folder you won't change its name or path later;
 2. Open the file `.bashrc`. If it doesn't exists, create one in the `HOME` directory. If you don't know how to get there, open the Terminal, type `cd` and then **ENTER**;
-3. Inside the file, in a new line, type the command: `export CREDENTIALS_HOME="/path/to/file"`, replacing the content inside quotes by the full path to the recently created YAML file;
+3. Inside the file, in a new line, type the command: `export CREDENTIALS_HOME="/path/to/file"`, replacing the content inside quotes by the full path to the recently created YAML (or JSON) file;
 4. Save the file and restart all open Terminal windows.
 
-> **Note:** If you don't follow this last prerequisite, you need to set the environment variable manually inside the code. To do that, inside your python code, after the imports, type the command (replacing the content inside quotes by the full path to the recently created YAML file):
+> **Note:** If you don't follow this last prerequisite, you need to set the environment variable manually inside the code. To do that, inside your python code, after the imports, type the command (replacing the content inside quotes by the full path to the recently created YAML (or JSON) file):
 
 ```
 os.environ["CREDENTIALS_HOME"] = "/path/to/file"
@@ -157,6 +158,34 @@ bq = BigQueryTool()
 
 sql_query = """SELECT * FROM `project_name.dataset.table`"""
 df = bq.query(sql_query)
+```
+
+#### query_and_save_results(self, sql_query, dest_dataset, dest_table, writing_mode="TRUNCATE", create_table_if_needed=False)
+Executes a query and saves the result in a table.
+
+writing_mode parameter determines how the data is going to be written in BigQuery.
+Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'TRUNCATE'):
+- APPEND: If the table already exists, BigQuery appends the data to the table.
+- EMPTY: If the table already exists and contains data, a 'duplicate' error
+         is returned in the job result.
+- TRUNCATE: If the table already exists, BigQuery overwrites the table data.
+
+If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
+Dafaults to False.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+# Enter valid values here
+dest_dataset = "dataset"
+dest_table = "some_other_table"
+sql_query = """SELECT * FROM `project_name.dataset.table`"""
+
+bq = BigQueryTool()
+
+bq.query_and_save_results(self, sql_query, dest_dataset, dest_table, create_table_if_needed=True)
 ```
 
 #### list_datasets(self)
@@ -1358,6 +1387,32 @@ print(s3.get_s3_path())
 
 # Version log
 See what changed in every version.
+
+### Version 0.0.4 (alpha)
+Fourth alpha release.
+
+#### New functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - query_and_save_results
+
+#### Modified functionalities:
+- general_tools
+  - fetch_credentials
+
+#### Functionalities still in development:
+- gcloudstorage_tools
+  - GCloudStorageTool
+    - rename_file
+    - rename_subfolder
+    - upload_subfolder
+    - download_subfolder
+    - delete_file
+    - delete_subfolder
+- s3_tools
+  - S3Tool
+    - upload_subfolder
+    - download_subfolder
 
 ### Version 0.0.3 (alpha)
 Third alpha release.
