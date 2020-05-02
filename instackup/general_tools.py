@@ -28,10 +28,9 @@ def fetch_credentials(service_name, **kwargs):
     try:
         secrets_path = os.environ["CREDENTIALS_HOME"]
         logger.debug(f"Environment Variable found: {secrets_path}")
-    except KeyError as e:
+    except KeyError:
         logger.exception('Environment Variable "CREDENTIALS_HOME" not found')
-        print('Environment Variable "CREDENTIALS_HOME" not found')
-        raise e
+        raise KeyError('Environment Variable "CREDENTIALS_HOME" not found')
 
     # Getting credentials' folder path
     if service_name == "credentials_path":
