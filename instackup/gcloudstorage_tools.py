@@ -286,7 +286,7 @@ class GCloudStorageTool(object):
         logger.debug(f"Filename: {filename}")
 
         # If this filename exists in this directory (yes, the one where this code lays), aborts the download
-        if filename in next(os.walk(os.getcwd()))[2]:
+        if filename in next(os.walk(os.getcwd()))[2] and not replace:
             logger.error("File already exists at {}. Clean the folder to continue.".format(os.path.join(os.getcwd(), filename)))
             raise FileExistsError("File already exists at {}. Clean the folder to continue.".format(os.path.join(os.getcwd(), filename)))
 
