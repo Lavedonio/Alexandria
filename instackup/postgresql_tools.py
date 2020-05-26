@@ -131,7 +131,7 @@ class PostgreSQLTool(object):
     def decribe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False):
         """Special query that returns all metadata from a specific table"""
 
-        sql_query = f"""SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema={schema} AND table_name={table}"""
+        sql_query = f"""SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema='{schema}' AND table_name='{table}'"""
         return self.query(sql_query, fetch_through_pandas=fetch_through_pandas, fail_silently=fail_silently)
 
     def close_connection(self):
