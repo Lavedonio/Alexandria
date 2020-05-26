@@ -22,7 +22,10 @@ logger.addHandler(file_handler)
 def fetch_credentials(service_name, **kwargs):
     """Gets the credentials from the secret file set in CREDENTIALS_HOME variable
     and returns the credentials of the selected service in a dictionary.
-    If service is "credentials_path", a path is returned instead."""
+    If service is "credentials_path", a path is returned instead.
+
+    Parses only 1 kwargs, not necessarily in order. Others are discarded.
+    """
 
     # Getting credentials' secret file path
     try:
@@ -46,10 +49,9 @@ def fetch_credentials(service_name, **kwargs):
         else:
             secrets = yaml.safe_load(stream)
 
-    # Variable connection_type is mainly for RedShift, since it has 2 ways of connecting to the database.
-    # Variable dictionary is for BigQuery project name/id dictionaries.
-    if kwargs.get("connection_type") is not None or kwargs.get("dictionary") is not None:
-        second_kwarg = kwargs.get("connection_type") or kwargs.get("dictionary")
+    # Parses only 1 kwarg if it's passed in function call
+    if bool(kwargs):
+        second_kwarg, *_ = kwargs.values()
         return secrets[service_name][second_kwarg]
     else:
         return secrets[service_name]
