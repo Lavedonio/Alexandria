@@ -356,7 +356,7 @@ class BigQueryTool(object):
 
         return schema_collection
 
-    def convert_dataframe_to_numeric(dataframe, exclude_columns=[], **kwargs):
+    def convert_dataframe_to_numeric(self, dataframe, exclude_columns=[], **kwargs):
         """Transform all string type columns into floats, except those in exclude_columns list.
 
         **kwargs are passed directly to pandas.to_numeric method.
@@ -368,7 +368,7 @@ class BigQueryTool(object):
         dataframe[cols] = dataframe[cols].apply(pd.to_numeric, **kwargs)
         return dataframe
 
-    def clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={}):
+    def clean_dataframe_column_names(self, dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={}):
         """Replace dataframe columns to only contain chars allowed in BigQuery tables column name.
         special_treatment dictionary substitutes the terms in the keys by its value pair.
         """
