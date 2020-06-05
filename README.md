@@ -3,29 +3,56 @@ This Python library is an open source way to standardize and simplify connection
 
 # Index
 
-- [Current release](https://github.com/Lavedonio/instackup#current-release)
-- [Prerequisites](https://github.com/Lavedonio/instackup#prerequisites)
-- [Installation](https://github.com/Lavedonio/instackup#installation)
-- [Documentation](https://github.com/Lavedonio/instackup#documentation)
-  - [bigquery_tools](https://github.com/Lavedonio/instackup#bigquery_tools)
-  - [gcloudstorage_tools](https://github.com/Lavedonio/instackup#gcloudstorage_tools)
-  - [general_tools](https://github.com/Lavedonio/instackup#general_tools)
-  - [redshift_tools](https://github.com/Lavedonio/instackup#redshift_tools)
-  - [s3_tools](https://github.com/Lavedonio/instackup#s3_tools)
-- [Version log](https://github.com/Lavedonio/instackup#version-log)
+- [Current release](#current-release)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Documentation](#documentation)
+  - [bigquery_tools](#bigquery_tools)
+  - [gcloudstorage_tools](#gcloudstorage_tools)
+  - [general_tools](#general_tools)
+  - [heroku_tools](#heroku_tools)
+  - [postgresql_tools](#postgresql_tools)
+  - [redshift_tools](#redshift_tools)
+  - [s3_tools](#s3_tools)
+- [Version log](#version-log)
 
 # Current release
-## Version 0.0.4 (alpha)
-Fourth alpha release.
+## Version 0.0.5 (alpha)
+Fifth alpha release.
+
+#### Added modules:
+- heroku_tools
+- postgresql_tools
+
+Inside those modules, these classes and functions/methods were added:
+- HerokuTool
+  - \_\_init\_\_
+  - app_flag @property
+  - execute
+- PostgreSQLTool
+  - \_\_init\_\_
+  - connect
+  - commit
+  - rollback
+  - execute_sql
+  - query
+  - unload_to_S3
+  - close_connection
+  - \_\_enter\_\_
+  - \_\_exit\_\_
 
 #### New functionalities:
 - bigquery_tools
   - BigQueryTool
-    - query_and_save_results
+    - convert_postgresql_table_schema
+    - convert_multiple_postgresql_tables_schema
 
 #### Modified functionalities:
 - general_tools
   - fetch_credentials
+
+#### Bug fixes:
+- BigQueryTool.convert_dataframe_to_numeric and BigQueryTool.clean_dataframe_column_names methods were failing because the self parameter was missing.
 
 #### Functionalities still in development:
 - gcloudstorage_tools
@@ -95,6 +122,14 @@ RedShift:
     host: blablabla.random.us-east-2.redshift.amazonaws.com
     password: masterpassword
     port: 5439
+
+PostgreSQL:
+  default:
+    dbname: postgres
+    user: postgres
+    host: localhost
+    password:
+    port: 5432
 ```
 Save this file with `.yml` extension in a folder where you know the path won't be modified, like the Desktop folder (Example: `C:\Users\USER\Desktop\Credentials\secret.yml`).
 
@@ -759,6 +794,7 @@ from instackup.general_tools import fetch_credentials
 print(fetch_credentials(service_name="Google"))
 print(fetch_credentials("AWS"))
 print(fetch_credentials("RedShift", connection_type="cluster_credentials"))
+print(fetch_credentials(service_name="PostgreSQL", connection="default"))
 print(fetch_credentials("credentials_path"))
 ```
 
@@ -806,6 +842,291 @@ print(f"Bucket name: {bucket_name}")  # output: >>> some_bucket
 print(f"Subfolder: {subfolder}")      # output: >>> subfolder
 ```
 
+## heroku_tools
+### HerokuTool
+This class encapsulates and handle most of the interaction needed with Heroku CLI, so the base code becomes more readable and straightforward.
+
+#### \_\_init\_\_(self, heroku_path="heroku", app=None, remote=None)
+Initialization takes an optional parameter _heroku_path_ that's either the PATH variable or the actual path to the CLI app location in the system.
+
+It also takes 2 extra optional parameters: _app_ and _remote_ that specify the current app in use. Doesn't need to fill both, just one is ok. If there's only one registered app, these parameter don't need to be filled.
+
+Usage example:
+```
+from instackup.heroku_tools import HerokuTool
+
+# Doesn't need to fill both app and remote parameters. This is just for an example.
+heroku = HerokuTool(heroku_path="path/to/heroku", app="lavedonio", remote="heroku-staging")
+```
+
+#### app_flag(self) @property
+Returns the app flag string that will be used as part of the program in execute method, based on the app or the remote parameters given in \_\_init\_\_.
+
+#### execute(self, cmd)
+Executes a Heroku command via the CLI and returns the output.
+
+Usage example:
+```
+from instackup.heroku_tools import HerokuTool
+
+heroku = HerokuTool(remote="heroku-staging")
+result = heroku.execute("releases")
+
+print(result)
+```
+
+## postgresql_tools
+### PostgreSQLTool
+This class handle most of the interaction needed with PostgreSQL, so the base code becomes more readable and straightforward.
+
+This class implements the with statement, so there are 2 ways of using it.
+
+**1st way:**
+
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+with PostgreSQLTool() as pg:
+    # use pg object to interact with PostgreSQL database
+```
+
+**2nd way:**
+
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # use pg object to interact with PostgreSQL database
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    pg.close_connection()
+```
+
+Easy to see that it is recommended (and easier) to use the first syntax.
+
+#### \_\_init\_\_(self, connect_by_cluster=True)
+Initialization takes connect_by_cluster parameter that sets connection type and has no return value.
+
+The \_\_init\_\_ method doesn't actually opens the connection, but sets all values required by the connect method.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+pg = PostgreSQLTool()
+```
+
+#### connect(self, fail_silently=False)
+Create the connection using the \_\_init\_\_ attributes and returns its own object for with statement.
+
+If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+pg = PostgreSQLTool()
+pg.connect()
+# remember to close the connection later
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+```
+
+#### commit(self)
+Commits any pending transaction to the database. It has no extra parameter or return value.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+pg = PostgreSQLTool()
+pg.connect()
+# Do stuff
+pg.commit()
+# remember to close the connection later
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # Do stuff
+
+    # No need to explictly commit as it will do when leaving this context, but nonetheless:
+    pg.commit()
+```
+
+#### rollback(self)
+Roll back to the start of any pending transaction. It has no extra parameter or return value.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # Do stuff
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    # remember to close the connection later
+    pg.close_connection()
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # Do stuff
+    
+    # No need to explictly commit or rollback as it will do when leaving this context, but nonetheless:
+    if meet_condition:
+        pg.commit()
+    else:
+        pg.rollback()
+```
+
+#### execute_sql(self, command, fail_silently=False)
+Execute a SQL command (CREATE, UPDATE and DROP). It has no return value.
+
+If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+
+sql_cmd = """CREATE TABLE test (
+    id          integer NOT NULL CONSTRAINT firstkey PRIMARY KEY,
+    username    varchar(40) UNIQUE NOT NULL,
+    fullname    varchar(64) NOT NULL,
+    created_at  TIMESTAMP NOT NULL,
+    last_login  TIMESTAMP
+);
+"""
+
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # Execute the command
+    pg.execute_sql(sql_cmd)
+
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    # remember to close the connection later
+    pg.close_connection()
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # This command would throw an error (since the table already was created before),
+    # but since fail_silently parameter is set to True, it'll catch the exception
+    # and let the code continue past this point.
+    pg.execute_sql(sql_cmd, fail_silently=True)
+
+    # other code
+```
+
+#### query(self, sql_query, fetch_through_pandas=True, fail_silently=False)
+Run a query and return the results.
+
+fetch_through_pandas parameter tells if the query should be parsed by psycopg2 cursor or pandas.
+
+If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+
+sql_query = """SELECT * FROM table LIMIT 100"""
+
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # Returns a list of tuples containing the rows of the response
+    table = pg.query(sql_cmd, fetch_through_pandas=False, fail_silently=True)
+
+    # Do something with table variable
+
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    # remember to close the connection later
+    pg.close_connection()
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # Returns a Pandas dataframe
+    df = pg.query(sql_cmd)
+
+    # To do operations with dataframe, you'll need to import pandas library
+
+    # other code
+```
+
+#### close_connection(self)
+Closes Connection with PostgreSQL database. It has no extra parameter or return value.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # Do stuff
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    pg.close_connection()
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # Do stuff
+
+    # Will close the connection automatically when existing this scope
+```
+
 ## redshift_tools
 ### RedShiftTool
 This class handle most of the interaction needed with RedShift, so the base code becomes more readable and straightforward.
@@ -849,7 +1170,7 @@ The \_\_init\_\_ method doesn't actually opens the connection, but sets all valu
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 rs = RedShiftTool()
 ```
@@ -861,7 +1182,7 @@ If fail_silently parameter is set to True, any errors will be surpressed and not
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 rs = RedShiftTool()
 rs.connect()
@@ -879,7 +1200,7 @@ Commits any pending transaction to the database. It has no extra parameter or re
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 rs = RedShiftTool()
 rs.connect()
@@ -903,7 +1224,7 @@ Roll back to the start of any pending transaction. It has no extra parameter or 
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 rs = RedShiftTool()
 rs.connect()
@@ -940,7 +1261,7 @@ If fail_silently parameter is set to True, any errors will be surpressed and not
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 
 sql_cmd = """CREATE TABLE test (
@@ -991,7 +1312,7 @@ If fail_silently parameter is set to True, any errors will be surpressed and not
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 
 sql_query = """SELECT * FROM table LIMIT 100"""
@@ -1037,7 +1358,7 @@ Unload options can be better understood in this link: https://docs.aws.amazon.co
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 
 # Maybe you'll get this timestamp from other source
@@ -1081,7 +1402,7 @@ Closes Connection with RedShift database. It has no extra parameter or return va
 
 Usage example:
 ```
-from instackup.bigquery import RedShiftTool
+from instackup.redshift_tools import RedShiftTool
 
 rs = RedShiftTool()
 rs.connect()
@@ -1136,7 +1457,7 @@ since the reason for this to exists is to make the programmers interactions with
 easier to write and the code easier to read.
 
 #### \_\_init\_\_(self, bucket=None, subfolder="", s3_path=None)
-Takes a either s3_path or both bucket name and subfolder name as parameters to set the current working directory. It also opens a connection with AWS S3.
+Takes either a s3_path or both bucket name and subfolder name as parameters to set the current working directory. It also opens a connection with AWS S3.
 
 The paradigm of this class is that all the operations are done in the current working directory, so it is important to set the right path (you can reset it later, but still).
 
@@ -1388,6 +1709,57 @@ print(s3.get_s3_path())
 # Version log
 See what changed in every version.
 
+### Version 0.0.5 (alpha)
+Fifth alpha release.
+
+#### Added modules:
+- heroku_tools
+- postgresql_tools
+
+Inside those modules, these classes and functions/methods were added:
+- HerokuTool
+  - \_\_init\_\_
+  - app_flag @property
+  - execute
+- PostgreSQLTool
+  - \_\_init\_\_
+  - connect
+  - commit
+  - rollback
+  - execute_sql
+  - query
+  - unload_to_S3
+  - close_connection
+  - \_\_enter\_\_
+  - \_\_exit\_\_
+
+#### New functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - convert_postgresql_table_schema
+    - convert_multiple_postgresql_tables_schema
+
+#### Modified functionalities:
+- general_tools
+  - fetch_credentials
+
+#### Bug fixes:
+- BigQueryTool.convert_dataframe_to_numeric and BigQueryTool.clean_dataframe_column_names methods were failing because the self parameter was missing.
+
+#### Functionalities still in development:
+- gcloudstorage_tools
+  - GCloudStorageTool
+    - rename_file
+    - rename_subfolder
+    - upload_subfolder
+    - download_subfolder
+    - delete_file
+    - delete_subfolder
+- s3_tools
+  - S3Tool
+    - upload_subfolder
+    - download_subfolder
+
 ### Version 0.0.4 (alpha)
 Fourth alpha release.
 
@@ -1503,7 +1875,7 @@ Inside this module, these classes and functions/methods were added:
 ### Version 0.0.1 (alpha)
 First alpha release:
 
-Added modules:
+#### Added modules:
 - bigquery_tools
 - general_tools
 - redshift_tools
@@ -1544,7 +1916,7 @@ Inside those modules, these classes and functions/methods were added:
   - delete_file
   - delete_subfolder
 
-Modules still in development:
+#### Modules still in development:
 - gcloudstorage_tools
 
 Inside this module, these classes and functions/methods are in development:
