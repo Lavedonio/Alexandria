@@ -25,7 +25,7 @@ class PostgreSQLTool(object):
 
     def __init__(self, connection='default'):
         # Getting credentials
-        postgresql_creds = fetch_credentials(service_name="RedShift", connection=connection)
+        postgresql_creds = fetch_credentials(service_name="PostgreSQL", connection=connection)
 
         self.dbname = postgresql_creds["dbname"]
         self.user = postgresql_creds["user"]
@@ -94,7 +94,7 @@ class PostgreSQLTool(object):
         fetch_through_pandas parameter tells if the query should be parsed by psycopg2 cursor or pandas.
         If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution."""
 
-        # Eliminating SQL table quotes that can't be handled by RedShift
+        # Eliminating SQL table quotes that can't be handled by PostgreSQL
         sql_query = sql_query.replace("`", "")
 
         if fetch_through_pandas:
@@ -135,7 +135,7 @@ class PostgreSQLTool(object):
         return self.query(sql_query, fetch_through_pandas=fetch_through_pandas, fail_silently=fail_silently)
 
     def close_connection(self):
-        """Closes Connection with RedShift database"""
+        """Closes Connection with PostgreSQL database"""
         self.connection.close()
         logger.info("Connection closed.")
 
