@@ -23,6 +23,57 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
+# PostgreSQL reference: https://www.postgresql.org/docs/9.5/datatype.html
+# BigQuery reference: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types
+POSTGRES_TO_BIGQUERY_TYPE_CONVERTER = {
+    # Boolean
+    "boolean": "BOOLEAN",
+
+    # Bytes
+    "bigserial": "BYTES",
+    "bit": "BYTES",
+    "bit varying": "BYTES",
+    "bytea": "BYTES",
+
+    # Date
+    "date": "DATE",
+
+    # Float
+    "double precision": "FLOAT",
+    "real": "FLOAT",
+
+    # Integer
+    "bigint": "INTEGER",
+    "integer": "INTEGER",
+
+    # Numeric
+    "decimal": "NUMERIC",
+    "money": "NUMERIC",
+    "numeric": "NUMERIC",
+
+    # String
+    "array": "STRING",
+    "character": "STRING",
+    "character varying": "STRING",
+    "json": "STRING",
+    "jsonb": "STRING",
+    "oid": "STRING",
+    "text": "STRING",
+    "user-defined": "STRING",
+    "uuid": "STRING",
+
+    # Time
+    "time": "TIME",
+    "time with time zone": "TIME",
+    "time without time zone": "TIME",
+
+    # Timestamp
+    "timestamp": "TIMESTAMP",
+    "timestamp with time zone": "TIMESTAMP",
+    "timestamp without time zone": "TIMESTAMP",
+}
+
+
 class BigQueryTool(object):
     """This class handle most of the interaction needed with BigQuery,
     so the base code becomes more readable and straightforward."""
@@ -136,7 +187,7 @@ class BigQueryTool(object):
         return [ds.dataset_id for ds in self.client.list_datasets()]
 
     def list_tables_in_dataset(self, dataset, get=None, return_type="dict"):
-        """ Lists all tables inside a dataset. Will fail if dataset doesn't exist.
+        """Lists all tables inside a dataset. Will fail if dataset doesn't exist.
 
         get parameter can be a string or list of strings. If only a string is passed,
         will return a list of values of that attribute of all tables
@@ -243,6 +294,67 @@ class BigQueryTool(object):
             schema["fields"].append(column_schema)
 
         return schema
+
+    def convert_postgresql_table_schema(self, dataframe):
+        """Receives a dataframe containing schema information from exactly one table from PostgreSQL db
+        and converts it to a BigQuery schema format that can be used to upload data.
+
+        Returns a dictionary containing the BigQuery formatted schema.
+        """
+
+        schema = {
+            "fields": []
+        }
+
+        for index, row in dataframe.iterrows():
+            column_name = row['column_name']
+            data_type = row['data_type']
+            required = row.get("is_nullable")
+
+            # Getting proper column type from dict reference
+            try:
+                column_type = POSTGRES_TO_BIGQUERY_TYPE_CONVERTER[data_type.lower()]
+            except KeyError:
+                column_type = "STRING"
+
+            # Setting proper column mode
+            if data_type.lower() == "array":
+                mode = "REPEATED"
+            else:
+                if required:
+                    mode = "REQUIRED"
+                else:
+                    mode = "NULLABLE"
+
+            # Adding converted column metadata to list
+            column_schema = {
+                "type": column_type,
+                "name": column_name,
+                "mode": mode
+            }
+
+            schema['fields'].append(column_schema)
+
+        # Sorting field list by names.
+        # Idea from https://stackoverflow.com/questions/72899/how-do-i-sort-a-list-of-dictionaries-by-a-value-of-the-dictionary
+        schema["fields"] = sorted(schema["fields"], key=lambda k: k['name'])
+
+        return schema
+
+    def convert_multiple_postgresql_tables_schema(self, dataframe):
+        """Receives a dataframe containing schema information from exactly one or more tables from PostgreSQL db
+        and converts it to a BigQuery schema format that can be used to upload data.
+
+        Returns a dictionary containing the table "full name" and the BigQuery formatted schema as key-value pairs.
+        """
+
+        dataframe['table_ref'] = dataframe[['table_catalog', 'table_schema', 'table_name']].agg('-'.join, axis=1)
+
+        schema_collection = {}
+        for table_ref in set(dataframe['table_ref'].to_list()):
+            schema_collection[table_ref] = self.convert_postgresql_table_schema(dataframe[dataframe['table_ref'] == table_ref])
+
+        return schema_collection
 
     def convert_dataframe_to_numeric(dataframe, exclude_columns=[], **kwargs):
         """Transform all string type columns into floats, except those in exclude_columns list.
