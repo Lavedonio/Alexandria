@@ -74,6 +74,19 @@ POSTGRES_TO_BIGQUERY_TYPE_CONVERTER = {
 }
 
 
+# Based on this convertion table: https://miro.medium.com/max/1052/1*3lUW3r6VLR-woQv2t-sT-g.png
+JSON_TO_BIGQUERY_TYPE_CONVERTER = {
+    "string": "STRING",
+    "number": "NUMERIC",
+    "integer": "INTEGER",
+    "real": "FLOAT",
+    "boolean": "BOOLEAN",
+    "array": "STRING",
+    "object": "STRING",
+    "null": "STRING",
+}
+
+
 class BigQueryTool(object):
     """This class handle most of the interaction needed with BigQuery,
     so the base code becomes more readable and straightforward."""
@@ -295,18 +308,38 @@ class BigQueryTool(object):
 
         return schema
 
-    def convert_postgresql_table_schema(self, dataframe):
+    def convert_postgresql_table_schema(self, dataframe, parse_json_columns=True):
         """Receives a dataframe containing schema information from exactly one table from PostgreSQL db
         and converts it to a BigQuery schema format that can be used to upload data.
 
+        If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
+        If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type
+        columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+
         Returns a dictionary containing the BigQuery formatted schema.
         """
+
+        # Since some operations might change the DataFrame, it starts by making a copy of the parameter given
+        df = dataframe.copy()
+
+        # Basic check to see if the given DataFrame is compliant with the method's needs
+        if parse_json_columns and ('json' in df['data_type'].values or 'jsonb' in df['data_type'].values):
+            try:
+                assert set(['json_key', 'json_value_type']).issubset(df.columns.values.tolist())
+            except AssertionError:
+                raise ValueError("'json_key' and 'json_value_type' are not part of given DataFrame.")
+        else:
+            try:
+                df = df[df["json_key"] != ""]
+                df.drop(['json_key', 'json_value_type'], axis=1, inplace=True)
+            except KeyError:
+                pass
 
         schema = {
             "fields": []
         }
 
-        for index, row in dataframe.iterrows():
+        for index, row in df.iterrows():
             column_name = row['column_name']
             data_type = row['data_type']
             required = row.get("is_nullable")
@@ -326,14 +359,56 @@ class BigQueryTool(object):
                 else:
                     mode = "NULLABLE"
 
-            # Adding converted column metadata to list
-            column_schema = {
-                "type": column_type,
-                "name": column_name,
-                "mode": mode
-            }
+            if parse_json_columns and data_type.lower() in ['jsonb', 'json']:
 
-            schema['fields'].append(column_schema)
+                # Checks whether this column was already added to the schema or not
+                if column_name not in [x['name'] for x in schema['fields']]:
+
+                    # Filters the DataFrame so just the rows where there are relevant
+                    # information about the focused json keys-values column are being searched
+                    json_col_df = df[(df['column_name'] == column_name) & (df['json_key'] != "")]
+
+                    fields = []
+                    for _, json_row in json_col_df.iterrows():
+                        json_key = json_row['json_key']
+                        json_value_type = json_row['json_value_type']
+
+                        # Getting proper column type from dict reference
+                        try:
+                            json_value_column_type = JSON_TO_BIGQUERY_TYPE_CONVERTER[json_value_type.lower()]
+                        except KeyError:
+                            json_value_column_type = "STRING"
+
+                        # If type is an Array, sets the right mode value
+                        if json_value_type.lower() == "array":
+                            json_value_mode = "REPEATED"
+                        else:
+                            json_value_mode = "NULLABLE"
+
+                        # Add converted json key data type to the fields list
+                        fields.append({
+                            "type": json_value_column_type,
+                            "name": json_key,
+                            "mode": json_value_mode
+                        })
+
+                    # Adding converted column metadata to list
+                    column_schema = {
+                        "type": "RECORD",
+                        "name": column_name,
+                        "mode": "REPEATED",
+                        "fields": fields
+                    }
+                    schema['fields'].append(column_schema)
+
+            else:
+                # Adding converted column metadata to list
+                column_schema = {
+                    "type": column_type,
+                    "name": column_name,
+                    "mode": mode
+                }
+                schema['fields'].append(column_schema)
 
         # Sorting field list by names.
         # Idea from https://stackoverflow.com/questions/72899/how-do-i-sort-a-list-of-dictionaries-by-a-value-of-the-dictionary
@@ -341,9 +416,13 @@ class BigQueryTool(object):
 
         return schema
 
-    def convert_multiple_postgresql_tables_schema(self, dataframe):
+    def convert_multiple_postgresql_tables_schema(self, dataframe, parse_json_columns=True):
         """Receives a dataframe containing schema information from exactly one or more tables from PostgreSQL db
         and converts it to a BigQuery schema format that can be used to upload data.
+
+        If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
+        If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type
+        columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
 
         Returns a dictionary containing the table "full name" and the BigQuery formatted schema as key-value pairs.
         """
@@ -352,7 +431,7 @@ class BigQueryTool(object):
 
         schema_collection = {}
         for table_ref in set(dataframe['table_ref'].to_list()):
-            schema_collection[table_ref] = self.convert_postgresql_table_schema(dataframe[dataframe['table_ref'] == table_ref])
+            schema_collection[table_ref] = self.convert_postgresql_table_schema(dataframe[dataframe['table_ref'] == table_ref], parse_json_columns=parse_json_columns)
 
         return schema_collection
 
@@ -399,6 +478,65 @@ class BigQueryTool(object):
         logger.info("Starting upload...")
         destination = dataset + "." + table
         dataframe.to_gbq(destination, **kwargs)
+
+    def __parse_schema(self, schema):
+        """This is a private method used to parse a json formatted schema into a Python specific
+        BigQuery API format for the (also private) __job_preparation_file_upload method.
+        """
+
+        job_schema = []
+
+        if type(schema) is dict:
+            schema = schema["fields"]
+
+        for column_info in schema:
+            if column_info.get("mode") is None:
+                column_info["mode"] = "NULLABLE"
+
+            try:
+                assert column_info["name"]
+                assert column_info["type"]
+            except KeyError:
+                raise ValueError("Field incomplete. Doesn't have name and/or type parameters.")
+
+            logger.debug("Field parameters: name={name}, type={type}, mode={mode}, description={description}".format(
+                name=column_info["name"],
+                type=column_info["type"],
+                mode=column_info["mode"],
+                description=column_info.get("description")
+            ))
+
+            if column_info["type"].upper() == "RECORD":
+                fields = []
+                try:
+                    assert len(column_info["fields"]) > 0
+                except (AssertionError, KeyError):
+                    raise ValueError("Field {name} has RECORD type, but no associated nested fields".format(name=column_info["name"]))
+                else:
+                    fields = tuple(self.__parse_schema(schema=column_info["fields"]))
+            else:
+                fields = tuple()
+
+            job_schema.append(bigquery.SchemaField(
+                column_info["name"],
+                column_info["type"],
+                mode=column_info["mode"],
+                description=column_info.get("description"),
+                fields=fields
+            ))
+
+        return job_schema
+
+    def create_empty_table(self, dataset, table, schema):
+        """Creates an empty table at dataset.table location, based on schema given"""
+
+        schema = self.__parse_schema(schema=schema)
+
+        table_ref = self.dataset(dataset).table(table)
+        table = bigquery.Table(table_ref, schema=schema)
+
+        table = self.client.create_table(table)  # API request
+        print("Created table {}".format(table.full_table_id))
 
     def __job_preparation_file_upload(self, dataset, table, file_format="CSV",
                                       header_rows=1, delimiter=",", encoding="UTF-8",
@@ -469,29 +607,7 @@ class BigQueryTool(object):
                 else:
                     raise ValueError("No schema given. Schema autodetection is supported only for CSV and JSON file formats.")
             else:
-                job_schema = []
-                if type(schema) is dict:
-                    schema = schema["fields"]
-
-                for column_info in schema:
-                    if column_info.get("mode") is None:
-                        column_info["mode"] = "NULLABLE"
-
-                    logger.debug("Field parameters: name={name}, type={type}, mode={mode}, description={description}".format(
-                        name=column_info["name"],
-                        type=column_info["type"],
-                        mode=column_info["mode"],
-                        description=column_info.get("description")
-                    ))
-
-                    job_schema.append(bigquery.SchemaField(
-                        column_info["name"],
-                        column_info["type"],
-                        mode=column_info["mode"],
-                        description=column_info.get("description")
-                    ))
-
-                job_config.schema = job_schema
+                job_config.schema = self.__parse_schema(schema=schema)
         # ------- End of Job preparation -------
 
         return job_config, table_ref
