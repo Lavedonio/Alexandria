@@ -2,7 +2,7 @@ import os
 import logging
 import pandas as pd
 from google.cloud import storage
-from instackup.general_tools import fetch_credentials, parse_remote_uri
+from .general_tools import fetch_credentials, parse_remote_uri
 
 
 # Logging Configuration
