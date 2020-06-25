@@ -57,6 +57,16 @@ def fetch_credentials(service_name, **kwargs):
         return secrets[service_name]
 
 
+def code_location():
+    """Get the location of this script based on the secrets file.
+    It can be "local", "remote" or whatever if fits the description of
+    where the execution of this script takes place.
+
+    It's an alias for: fetch_credentials("Location")
+    """
+    return fetch_credentials("Location")
+
+
 def unicode_to_ascii(unicode_string):
     """Replaces all non-ascii chars in string by the closest possible match.
 

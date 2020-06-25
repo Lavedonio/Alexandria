@@ -97,6 +97,7 @@ Use the files [secret_template.yml](https://github.com/Lavedonio/instackup/blob/
 #                                                               #
 #################################################################
 
+Location: local
 
 Google:
   secret_filename: file.json
@@ -796,6 +797,19 @@ print(fetch_credentials("AWS"))
 print(fetch_credentials("RedShift", connection_type="cluster_credentials"))
 print(fetch_credentials(service_name="PostgreSQL", connection="default"))
 print(fetch_credentials("credentials_path"))
+```
+
+### code_location()
+Get the location of this script based on the secrets file. It can be "local", "remote" or whatever if fits the description of where the execution of this script takes place.
+
+Usage example:
+```
+from instackup.general_tools import code_location
+
+if code_location() == "local":
+    # set vars for when the code is executed locally
+else:
+    # set vars for when the code is executed remotely
 ```
 
 ### unicode_to_ascii(unicode_string)
