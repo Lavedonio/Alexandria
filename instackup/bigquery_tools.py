@@ -91,19 +91,20 @@ class BigQueryTool(object):
     """This class handle most of the interaction needed with BigQuery,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self):
+    def __init__(self, authenticate=True):
         # Code created following Google official API documentation:
         # https://cloud.google.com/bigquery/docs/reference/libraries
         # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries?hl=pt-br#bigquery_simple_app_query-python
 
-        # Getting credentials
-        google_creds = fetch_credentials("Google")
-        connect_file = google_creds["secret_filename"]
-        credentials_path = fetch_credentials("credentials_path")
+        if authenticate:
+            # Getting credentials
+            google_creds = fetch_credentials("Google")
+            connect_file = google_creds["secret_filename"]
+            credentials_path = fetch_credentials("credentials_path")
 
-        # Sets environment if not yet set
-        if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(credentials_path, connect_file)
+            # Sets environment if not yet set
+            if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(credentials_path, connect_file)
 
         # Initiating client
         logger.debug("Initiating BigQuery Client")

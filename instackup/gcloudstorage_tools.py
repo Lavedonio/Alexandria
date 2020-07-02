@@ -23,7 +23,7 @@ class GCloudStorageTool(object):
     """This class handle most of the interaction needed with Google Cloud Storage,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, bucket=None, subfolder="", gs_path=None):
+    def __init__(self, bucket=None, subfolder="", gs_path=None, authenticate=True):
         if all(param is not None for param in [bucket, gs_path]):
             logger.error("Specify either bucket name or full Google Cloud Storage path.")
             raise ValueError("Specify either bucket name or full Google Cloud Storage path.")
@@ -34,14 +34,15 @@ class GCloudStorageTool(object):
         if gs_path is not None:
             bucket, subfolder = parse_remote_uri(gs_path, "gs")
 
-        # Getting credentials
-        google_creds = fetch_credentials("Google")
-        connect_file = google_creds["secret_filename"]
-        credentials_path = fetch_credentials("credentials_path")
+        if authenticate:
+            # Getting credentials
+            google_creds = fetch_credentials("Google")
+            connect_file = google_creds["secret_filename"]
+            credentials_path = fetch_credentials("credentials_path")
 
-        # Sets environment if not yet set
-        if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(credentials_path, connect_file)
+            # Sets environment if not yet set
+            if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(credentials_path, connect_file)
 
         # Initiating client
         logger.debug("Initiating Google Cloud Storage Client")
