@@ -200,6 +200,17 @@ class BigQueryTool(object):
 
         return [ds.dataset_id for ds in self.client.list_datasets()]
 
+    def create_dataset(self, dataset, location="US"):
+        """Creates a new dataset."""
+
+        dataset_ref = self.client.dataset(dataset)
+        dataset = bigquery.Dataset(dataset_ref)
+
+        dataset.location = location
+
+        dataset = self.client.create_dataset(dataset)  # API request
+        print("Created dataset {}".format(dataset.full_dataset_id))
+
     def list_tables_in_dataset(self, dataset, get=None, return_type="dict"):
         """Lists all tables inside a dataset. Will fail if dataset doesn't exist.
 
