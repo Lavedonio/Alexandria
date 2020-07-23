@@ -1,6 +1,7 @@
 import os
 import logging
 import pandas as pd
+from io import StringIO
 from google.cloud import storage
 from .general_tools import fetch_credentials, parse_remote_uri
 
@@ -265,6 +266,49 @@ class GCloudStorageTool(object):
 
         # Still in development
         raise NotImplementedError
+
+    def upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, **kwargs):
+        """Uploads a dataframe directly to a file in the file_format given without having to save the file.
+        If no filename is given, it uses the one set in the blob and will fail if overwrite is set to False.
+
+        File formats supported are:
+        - CSV
+        - JSON
+
+        **kwargs are passed directly to .to_csv or .to_json methods (according with the file format chosen).
+        The complete documentation of these methods can be found here:
+        - CSV: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html
+        - JSON: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_json.html
+        """
+
+        # In-memory file so it doesn't need to save a local temporary file
+        f = StringIO()
+
+        # Saves dataframe to in-memory file object.
+        if file_format.upper() == 'CSV':
+            dataframe.to_csv(f, **kwargs)
+
+        elif file_format.upper() == 'JSON':
+            dataframe.to_json(f, **kwargs)
+
+        else:
+            raise ValueError(f"File format {file_format} not supported. Supported format are 'CSV' and 'JSON'.")
+
+        # Sets the pointer to the start of the in-memory file object
+        f.seek(0)
+
+        # Defines blob object and upload location
+        if filename is None:
+            blob = self.blob
+        else:
+            blob = self.bucket.blob(f"{self.subfolder}/{filename}")
+
+        # If file exists and can't overwrite, raises an error
+        if not overwrite and blob.exists():
+            raise FileExistsError("File already exists and overwrite is set to False.")
+
+        # If everything is right, it'll finally upload the file.
+        blob.upload_from_file(f)
 
     def download_file(self, fullfilename=None, replace=False):
         """Downloads remote gs file to local path.
