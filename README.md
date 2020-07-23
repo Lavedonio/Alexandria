@@ -10,6 +10,7 @@ This Python library is an open source way to standardize and simplify connection
   - [bigquery_tools](#bigquery_tools)
   - [gcloudstorage_tools](#gcloudstorage_tools)
   - [general_tools](#general_tools)
+  - [gsheets_tools](#gsheets_tools)
   - [heroku_tools](#heroku_tools)
   - [postgresql_tools](#postgresql_tools)
   - [redshift_tools](#redshift_tools)
@@ -17,42 +18,43 @@ This Python library is an open source way to standardize and simplify connection
 - [Version log](#version-log)
 
 # Current release
-## Version 0.0.5 (alpha)
-Fifth alpha release.
+## Version 0.0.6 (alpha)
+Sixth alpha release.
 
 #### Added modules:
-- heroku_tools
-- postgresql_tools
+- gsheets_tools
 
 Inside those modules, these classes and functions/methods were added:
-- HerokuTool
+- GSheetsTool
   - \_\_init\_\_
-  - app_flag @property
-  - execute
-- PostgreSQLTool
-  - \_\_init\_\_
-  - connect
-  - commit
-  - rollback
-  - execute_sql
-  - query
-  - unload_to_S3
-  - close_connection
-  - \_\_enter\_\_
-  - \_\_exit\_\_
+  - set_spreadsheet_by_url
+  - set_spreadsheet_by_key
+  - set_worksheet_by_id
+  - download
 
 #### New functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - create_dataset
+    - create_empty_table
+- gcloudstorage_tools
+  - GCloudStorageTool
+    - upload_from_dataframe
+- general_tools
+  - code_location
+- postgresql_tools
+  - PostgreSQLTool
+    - describe_table
+    - get_all_db_info
+
+#### Modified functionalities:
 - bigquery_tools
   - BigQueryTool
     - convert_postgresql_table_schema
     - convert_multiple_postgresql_tables_schema
 
-#### Modified functionalities:
-- general_tools
-  - fetch_credentials
-
 #### Bug fixes:
-- BigQueryTool.convert_dataframe_to_numeric and BigQueryTool.clean_dataframe_column_names methods were failing because the self parameter was missing.
+- BigQueryTool.create_empty_table method was failing because the client variable was missing when trying to get the table_ref object.
 
 #### Functionalities still in development:
 - gcloudstorage_tools
@@ -63,6 +65,9 @@ Inside those modules, these classes and functions/methods were added:
     - download_subfolder
     - delete_file
     - delete_subfolder
+- gsheets_tools
+  - GSheetsTool
+    - upload
 - s3_tools
   - S3Tool
     - upload_subfolder
@@ -167,6 +172,11 @@ Go to the Terminal and type:
 
 # Documentation
 ## bigquery_tools
+#### Global Variables
+There are some global variables that can be accessed an edited by the user. Those are:
+- **POSTGRES_TO_BIGQUERY_TYPE_CONVERTER**: Dictionary that is used to convert the column types from PostgreSQL to BigQuery Standard SQL.
+- **JSON_TO_BIGQUERY_TYPE_CONVERTER**: Dictionary that is used to convert the column types from JSON fields into BigQuery Standard SQL.
+
 ### BigQueryTool
 This class handle most of the interaction needed with BigQuery, so the base code becomes more readable and straightforward.
 
@@ -241,6 +251,19 @@ for ds in datasets:
     print(ds)
 ```
 
+#### create_dataset(self, dataset, location="US"):
+Creates a new dataset.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+bq = BigQueryTool()
+
+datasets = bq.create_dataset("google_analytics_reports")
+```
+
 #### list_tables_in_dataset(self, dataset, get=None, return_type="dict")
 Lists all tables inside a dataset. Will fail if dataset doesn't exist.
 
@@ -298,6 +321,66 @@ schema = bq.get_table_schema(dataset, table)
 
 with open('data.json', 'w') as fp:
     json.dump(schema, fp, sort_keys=True, indent=4)
+```
+
+#### convert_postgresql_table_schema(self, dataframe, parse_json_columns=True)
+Receives a dataframe containing schema information from exactly one table from PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
+
+If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
+
+If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+
+Returns a dictionary containing the BigQuery formatted schema.
+
+Usage example:
+```
+import json
+from instackup.bigquery_tools import BigQueryTool
+from instackup.postgresql_tools import PostgreSQLTool
+
+
+# Getting the PostgreSQL schema
+with PostgreSQLTool(connection="prod_db") as pg:
+  df = pg.describe_table()
+
+# Converting the schema from PostgreSQL format to BigQuery format
+bq = BigQueryTool()
+schema = bq.convert_postgresql_table_schema(df)
+
+# Saving schema
+with open('data.json', 'w') as fp:
+    json.dump(schema, fp, sort_keys=True, indent=4)
+```
+#### convert_multiple_postgresql_tables_schema(self, dataframe, parse_json_columns=True)
+Receives a dataframe containing schema information from exactly one or more tables from PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
+
+If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
+
+If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+
+Returns a dictionary containing the table "full name" and the BigQuery formatted schema as key-value pairs.
+
+Usage example:
+```
+import os
+import json
+from instackup.bigquery_tools import BigQueryTool
+from instackup.postgresql_tools import PostgreSQLTool
+
+
+# Getting the PostgreSQL schema from all tables in the DB
+with PostgreSQLTool(connection="prod_db") as pg:
+  df = pg.get_all_db_info()
+
+# Converting all the schemas from PostgreSQL format to BigQuery format
+bq = BigQueryTool()
+schemas = bq.convert_multiple_postgresql_tables_schema(df)
+
+# Saving schemas
+os.makedirs(os.getcwd(), "schemas")
+for name, schema in schemas.items():
+    with open(os.path.join('schemas', f'{name}.json'), 'w') as fp:
+        json.dump(schema, fp, sort_keys=True, indent=4)
 ```
 
 #### convert_dataframe_to_numeric(dataframe, exclude_columns=[], \*\*kwargs)
@@ -377,6 +460,36 @@ table = "some_table_name"
 
 bq = BigQueryTool()
 bq.upload(df, dataset, table)
+```
+
+#### create_empty_table(self, dataset, table, schema):
+Creates an empty table at dataset.table location, based on schema given.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+schema = {
+    'fields': [
+        {
+            "type": "INTEGER",
+            "name": "id",
+            "mode": "NULLABLE"
+        },
+        {
+            "type": "STRING",
+            "name": "name",
+            "mode": "NULLABLE"
+        }
+    ]
+}
+
+dataset = "some_dataset_name"
+table = "some_table_name"
+
+bq = BigQueryTool()
+bq.create_empty_table(dataset, table, schema)
 ```
 
 #### upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)
@@ -561,6 +674,22 @@ gs.set_subfolder("some/more_complex/subfolder/structure/")
 print(gs.get_gs_path())
 ```
 
+#### set_blob(self, blob)
+Takes a string as a parameter to set or reset the blob name. It has no return value.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+gs.set_blob("gs://some_bucket/subfolder/file.csv")
+
+# Check new path structure
+print(gs.get_gs_path())
+```
+
 #### set_by_path(self, s3_path)
 Takes a string as a parameter to reset the bucket name and subfolder name by its GS path. It has no return value.
 
@@ -725,6 +854,38 @@ gs.upload_file(file_location, "another_subfolder/")  # Just subfolder
 #### upload_subfolder(self, folder_path)
 Not implemented.
 
+#### upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, \*\*kwargs):
+Uploads a dataframe directly to a file in the file_format given without having to save the file. If no filename is given, it uses the one set in the blob and will fail if overwrite is set to False.
+
+File formats supported are:
+- CSV
+- JSON
+
+\*\*kwargs are passed directly to .to_csv or .to_json methods (according with the file format chosen).
+
+The complete documentation of these methods can be found here:
+- CSV: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html
+- JSON: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_json.html
+
+Usage Example:
+```
+import pandas as pd
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+df = pd.read_csv("C:\\Users\\USER\\Desktop\\file.csv")
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+
+
+gs.upload_from_dataframe(df, file_format="JSON", filename="file.json")
+
+# or
+
+gs.set_blob("gs://some_bucket/subfolder/file.csv")
+gs.upload_from_dataframe(df, overwrite=True)
+```
+
 #### download_file(self, fullfilename=None, replace=False)
 Downloads remote gs file to local path.
 
@@ -802,6 +963,8 @@ print(fetch_credentials("credentials_path"))
 ### code_location()
 Get the location of this script based on the secrets file. It can be "local", "remote" or whatever if fits the description of where the execution of this script takes place.
 
+It's an alias for: fetch_credentials("Location")
+
 Usage example:
 ```
 from instackup.general_tools import code_location
@@ -855,6 +1018,95 @@ bucket_name, subfolder = parse_remote_uri(gs_path, "gs")
 print(f"Bucket name: {bucket_name}")  # output: >>> some_bucket
 print(f"Subfolder: {subfolder}")      # output: >>> subfolder
 ```
+
+## gsheets_tools
+### GSheetsTool
+This class encapsulates the gspread module to ease the setup process and handle most of the interaction needed with Google Sheets, so the base code becomes more readable and straightforward.
+
+#### \_\_init\_\_(self, sheet_url=None, sheet_key=None, sheet_gid=None, auth_mode='secret_key', read_only=False, scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
+Initialization takes either _sheet_url_ or _sheet_key_ and _sheet_gid_ parameters to first referenciate the worksheet.
+
+_auth_mode_ parameter can either be **secret_key**, which will look for the configured Secret Key, **oauth**, which will prompt a window requiring manual authentication, or **composer**, which will use the current environment to set the credentials to that project.
+
+_read_only_ parameter will convert the scopes to their read only versions. That means that they will can only be seen or downloaded, but not edited.
+
+_scopes_ parameter sets the appropriated scopes to the environment when connecting. Sometimes only the spreadsheets authorization is necessary or can be given.
+
+Usage example:
+```
+from instackup.gsheets_tools import GSheetsTool
+
+
+sheet = GSheetsTool(sheet_url="https://docs.google.com/spreadsheets/d/0B7ciWr8lX8LTMVVyajlScU42OU0/edit#gid=214062020")
+
+# or
+
+sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="214062020")
+```
+
+#### set_spreadsheet_by_url(self, sheet_url)
+Set spreadsheet and worksheet attributes by the Spreadsheet URL.
+
+Usage example:
+```
+from instackup.gsheets_tools import GSheetsTool
+
+
+sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="214062020")
+
+# Do something with the selected sheet
+
+# Changing Sheets
+sheet.set_spreadsheet_by_url("https://docs.google.com/spreadsheets/d/0B7ciWr8lX8LTWjFMQW4yT2MtRlk/edit#gid=324336327")
+```
+
+#### set_spreadsheet_by_key(self, sheet_key)
+Set spreadsheet attribute by the Spreadsheet key value.
+
+Usage example:
+```
+from instackup.gsheets_tools import GSheetsTool
+
+
+sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="214062020")
+
+# Do something with the selected sheet
+
+# Changing Sheets (need to setup worksheet before using. See set_worksheet_by_id method)
+sheet.set_spreadsheet_by_key("0B7ciWr8lX8LTWjFMQW4yT2MtRlk")
+```
+
+#### set_worksheet_by_id(self, sheet_gid)
+Set worksheet attribute by the Spreadsheet gid value.
+
+Usage example:
+```
+from instackup.gsheets_tools import GSheetsTool
+
+
+sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="214062020")
+
+# Do something with the selected sheet
+
+# Changing Sheets
+sheet.set_spreadsheet_by_key("0B7ciWr8lX8LTWjFMQW4yT2MtRlk")
+sheet.set_worksheet_by_id("324336327")
+```
+
+#### download(self)
+Download the selected worksheet into a Pandas DataFrame. Raises an error if no worksheet is set.
+
+Usage example:
+```
+from instackup.gsheets_tools import GSheetsTool
+
+
+sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="214062020")
+df = sheet.download()
+```
+
+#### upload(self, dataframe, write_mode="TRUNCATE")
+Not implemented.
 
 ## heroku_tools
 ### HerokuTool
@@ -1107,6 +1359,90 @@ with PostgreSQLTool() as pg:
     df = pg.query(sql_cmd)
 
     # To do operations with dataframe, you'll need to import pandas library
+
+    # other code
+```
+
+#### describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)
+Special query that returns all metadata from a specific table
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # Returns a list of tuples containing the rows of the response (Table: public.users)
+    table = pg.describe_table("users", fetch_through_pandas=False, fail_silently=True)
+
+    # Do something with table variable
+
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    # remember to close the connection later
+    pg.close_connection()
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # Returns a Pandas dataframe with all schema info of that specific schema.table
+    # To do operations with dataframe, you'll need to import pandas library
+    df = pg.describe_table("airflow_logs", schema="another_schema")
+
+    # other code
+```
+
+#### get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)
+Gets all Database info, using a INFORMATION_SCHEMA query.
+
+Ignore table pg_stat_statements and tables inside schemas pg_catalog and information_schema.
+
+If get_json_info parameter is True, it adds 2 columns to add the data types from each key inside json and jsonb columns.
+
+fetch_through_pandas and fail_silently parameters are passed directly to the query method if get_json_info parameter is set to False; if it's not, these 2 parameters are passed as their default values.
+
+Returns either a Dataframe if get_json_info or fetch_through_pandas parameters are set to True, or a list of tuples, each representing a row, with their position in the same order as in the columns of the INFORMATION_SCHEMA.COLUMNS table.
+
+Usage example:
+```
+from instackup.postgresql_tools import PostgreSQLTool
+
+
+pg = PostgreSQLTool()
+pg.connect()
+
+try:
+    # Returns a list of tuples containing the rows of the response
+    schema_info = pg.get_all_db_info(get_json_info=False, fetch_through_pandas=False, fail_silently=True)
+
+    # Do something with table variable
+
+except Exception as e:
+    pg.rollback()
+    raise e
+else:
+    pg.commit()
+finally:
+    # remember to close the connection later
+    pg.close_connection()
+
+# or
+
+with PostgreSQLTool() as pg:
+    # Already connected, use pg object in this context
+
+    # Returns a Pandas dataframe with all schema info, including inside JSON and JSONB fields
+    # To do operations with dataframe, you'll need to import pandas library
+    df = pg.get_all_db_info()
 
     # other code
 ```
@@ -1742,7 +2078,6 @@ Inside those modules, these classes and functions/methods were added:
   - rollback
   - execute_sql
   - query
-  - unload_to_S3
   - close_connection
   - \_\_enter\_\_
   - \_\_exit\_\_
