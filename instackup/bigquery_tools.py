@@ -544,7 +544,7 @@ class BigQueryTool(object):
 
         schema = self.__parse_schema(schema=schema)
 
-        table_ref = self.dataset(dataset).table(table)
+        table_ref = self.client.dataset(dataset).table(table)
         table = bigquery.Table(table_ref, schema=schema)
 
         table = self.client.create_table(table)  # API request
