@@ -131,5 +131,5 @@ class GSheetsTool(object):
             raise ValueError("No worksheet set. Set it first before downloading.")
         return pd.DataFrame(self.worksheet.get_all_records())
 
-    def upload(self, write_mode="TRUCATE"):
+    def upload(self, dataframe, write_mode="TRUNCATE"):
         raise NotImplementedError
