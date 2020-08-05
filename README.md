@@ -10,7 +10,7 @@ This Python library is an open source way to standardize and simplify connection
 - [Version logs](#version-logs)
 
 # Current release
-Version 0.0.6 (alpha)
+**Version 0.0.6 (alpha)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -217,7 +217,7 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - [Development](https://github.com/Lavedonio/instackup/blob/master/version_logs/development.md#version-xxx-in-development)
-- [Version 0.0.6 (alpha)](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha-current_release.md#version-006-alpha) (Current release)
+- [Version 0.0.6 (alpha)](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha-current_release.md#version-006-alpha) (current release)
 - [Version 0.0.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.5-alpha.md#version-005-alpha)
 - [Version 0.0.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.4-alpha.md#version-004-alpha)
 - [Version 0.0.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.3-alpha.md#version-003-alpha)
