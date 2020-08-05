@@ -217,9 +217,10 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - [Development](https://github.com/Lavedonio/instackup/blob/master/version_logs/development.md#version-xxx-in-development)
-- [Version 0.0.6 (alpha)](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha-current_release.md#version-006-alpha) (current release)
-- [Version 0.0.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.5-alpha.md#version-005-alpha)
-- [Version 0.0.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.4-alpha.md#version-004-alpha)
-- [Version 0.0.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.3-alpha.md#version-003-alpha)
-- [Version 0.0.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.2-alpha.md#version-002-alpha)
-- [Version 0.0.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.1-alpha.md#version-001-alpha)
+- Alpha releases
+  - [Version 0.0.6](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha-current_release.md#version-006-alpha) (current release)
+  - [Version 0.0.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.5-alpha.md#version-005-alpha)
+  - [Version 0.0.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.4-alpha.md#version-004-alpha)
+  - [Version 0.0.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.3-alpha.md#version-003-alpha)
+  - [Version 0.0.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.2-alpha.md#version-002-alpha)
+  - [Version 0.0.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.1-alpha.md#version-001-alpha)
