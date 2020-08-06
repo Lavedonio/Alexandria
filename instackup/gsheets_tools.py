@@ -66,9 +66,9 @@ class GSheetsTool(object):
 
             if len(split_url) == 2:
                 try:
-                    worksheet_index = [x.id for x in sheet.worksheets()].index(split_url[1])
+                    worksheet_index = [x.id for x in sheet.worksheets()].index(int(split_url[1]))
                 except ValueError:
-                    raise ValueError(f"Worksheet ID (sheet_gid: {split_url[1]}) not found in {self.spreadsheet.title} (sheet_key: {self.spreadsheet.id})")
+                    raise ValueError(f"Worksheet ID (sheet_gid: {split_url[1]}) not found in {sheet.title} (sheet_key: {sheet.id})")
                 worksheet = sheet.get_worksheet(worksheet_index)
             else:
                 worksheet = None
@@ -77,9 +77,9 @@ class GSheetsTool(object):
             sheet = gspread_client.open_by_key(sheet_key)
             if sheet_gid is not None:
                 try:
-                    worksheet_index = [x.id for x in sheet.worksheets()].index(sheet_gid)
+                    worksheet_index = [x.id for x in sheet.worksheets()].index(int(sheet_gid))
                 except ValueError:
-                    raise ValueError(f"Worksheet ID (sheet_gid: {sheet_gid}) not found in {self.spreadsheet.title} (sheet_key: {self.spreadsheet.id})")
+                    raise ValueError(f"Worksheet ID (sheet_gid: {sheet_gid}) not found in {sheet.title} (sheet_key: {sheet.id})")
                 worksheet = sheet.get_worksheet(worksheet_index)
             else:
                 worksheet = None
@@ -100,7 +100,7 @@ class GSheetsTool(object):
 
         if len(split_url) == 2:
             try:
-                worksheet_index = [x.id for x in sheet.worksheets()].index(split_url[1])
+                worksheet_index = [x.id for x in sheet.worksheets()].index(int(split_url[1]))
             except ValueError:
                 raise ValueError(f"Worksheet ID (sheet_gid: {split_url[1]}) not found in {self.spreadsheet.title} (sheet_key: {self.spreadsheet.id})")
             worksheet = sheet.get_worksheet(worksheet_index)
@@ -119,7 +119,7 @@ class GSheetsTool(object):
         """Set worksheet attribute by the Spreadsheet gid value."""
 
         try:
-            worksheet_index = [x.id for x in self.spreadsheet.worksheets()].index(sheet_gid)
+            worksheet_index = [x.id for x in self.spreadsheet.worksheets()].index(int(sheet_gid))
         except ValueError:
             raise ValueError(f"Worksheet ID (sheet_gid: {sheet_gid}) not found in {self.spreadsheet.title} (sheet_key: {self.spreadsheet.id})")
         self.worksheet = self.spreadsheet.get_worksheet(worksheet_index)

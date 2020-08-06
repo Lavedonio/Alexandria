@@ -16,6 +16,11 @@
     - get_blob_info
     - list_blob_attributes
 
+## Bug fixes:
+- GSheetsTool class was calling a unset attribute (self.spreadsheet) in an error message.
+- GSheetsTool wasn't setting the correct worksheet when setting by the sheet_url parameter in its \_\_init\_\_ and set_spreadsheet_by_url methods.
+- GSheetsTool now can take either a String or Integer value for the sheet_gid parameter in its \_\_init\_\_ and set_worksheet_by_id methods.
+
 ## Other additions:
 - Refactored documentation to create a clearer README
 
