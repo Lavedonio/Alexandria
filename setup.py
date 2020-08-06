@@ -34,10 +34,11 @@ setuptools.setup(
         'google-cloud-bigquery',
         'google-cloud-bigquery-datatransfer',
         'google-cloud-storage>=1.18.0',
+        'grpcio',
         'gcsfs',
         'gspread',
         'pandas',
-        'psycopg2',
+        'psycopg2-binary',
     ],
     license="MIT",
     classifiers=[
