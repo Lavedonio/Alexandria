@@ -17,8 +17,8 @@ This is the documentation for the bigquery_tools modules and all its contents, w
   - [clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={})](#clean_dataframe_column_namesdataframe-allowed_charsabcdefghijklmnopqrstuvwxyz0123456789-special_treatment)
   - [upload(self, dataframe, dataset, table, \*\*kwargs)](#uploadself-dataframe-dataset-table-kwargs)
   - [create_empty_table(self, dataset, table, schema)](#create_empty_tableself-dataset-table-schema)
-  - [upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)](#upload_from_gcsself-dataset-table-gs_path-file_formatcsv-header_rows1-delimiter-encodingutf-8-writing_modeappend-create_table_if_neededfalse-schemanone)
-  - [upload_from_file(self, dataset, table, file_location, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)](#upload_from_fileself-dataset-table-file_location-file_formatcsv-header_rows1-delimiter-encodingutf-8-writing_modeappend-create_table_if_neededfalse-schemanone)
+  - [upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", ignore_unknown_values=False, max_bad_records=0, writing_mode="APPEND", create_table_if_needed=False, schema=None)](#upload_from_gcsself-dataset-table-gs_path-file_formatcsv-header_rows1-delimiter-encodingutf-8-ignore_unknown_valuesfalse-max_bad_records0-writing_modeappend-create_table_if_neededfalse-schemanone)
+  - [upload_from_file(self, dataset, table, file_location, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", ignore_unknown_values=False, max_bad_records=0, writing_mode="APPEND", create_table_if_needed=False, schema=None)](#upload_from_fileself-dataset-table-file_location-file_formatcsv-header_rows1-delimiter-encodingutf-8-ignore_unknown_valuesfalse-max_bad_records0-writing_modeappend-create_table_if_neededfalse-schemanone)
   - [start_transfer(self, project_path=None, project_name=None, transfer_name=None)](#start_transferself-project_pathnone-project_namenone-transfer_namenone)
 
 # Module Contents
@@ -344,7 +344,7 @@ bq = BigQueryTool()
 bq.create_empty_table(dataset, table, schema)
 ```
 
-### upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)
+### upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", ignore_unknown_values=False, max_bad_records=0, writing_mode="APPEND", create_table_if_needed=False, schema=None)
 Uploads data from Google Cloud Storage directly to BigQuery.
 
 dataset and table parameters determines the destination of the upload.
@@ -361,6 +361,10 @@ delimiter determines the string character used to delimite the data. Defaults to
 
 encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
 Defaults to 'UTF-8'.
+
+ignore_unknown_values indicates if it should allow extra values that are not represented in the table schema. If true, the extra values are ignored. If false, records with extra columns are treated as bad records. Defaults to False.
+
+max_bad_records is the maximum number of bad records allowed; if it exceeds this value, it'll raise an error. Defalts to 0 (i.e. all values must be valid).
 
 writing_mode parameter determines how the data is going to be written in BigQuery.
 Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
@@ -395,7 +399,7 @@ with open('data.json', 'r') as fp:
 bq.upload_from_gcs(dataset, table, gs_path, file_format="JSON", create_table_if_needed=True, schema=schema)
 ```
 
-### upload_from_file(self, dataset, table, file_location, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", writing_mode="APPEND", create_table_if_needed=False, schema=None)
+### upload_from_file(self, dataset, table, file_location, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", ignore_unknown_values=False, max_bad_records=0, writing_mode="APPEND", create_table_if_needed=False, schema=None)
 Uploads data from a local file to BigQuery.
 
 dataset and table parameters determines the destination of the upload.
@@ -412,6 +416,10 @@ delimiter determines the string character used to delimite the data. Defaults to
 
 encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
 Defaults to 'UTF-8'.
+
+ignore_unknown_values indicates if it should allow extra values that are not represented in the table schema. If true, the extra values are ignored. If false, records with extra columns are treated as bad records. Defaults to False.
+
+max_bad_records is the maximum number of bad records allowed; if it exceeds this value, it'll raise an error. Defalts to 0 (i.e. all values must be valid).
 
 writing_mode parameter determines how the data is going to be written in BigQuery.
 Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):

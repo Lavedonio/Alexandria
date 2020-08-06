@@ -552,6 +552,7 @@ class BigQueryTool(object):
 
     def __job_preparation_file_upload(self, dataset, table, file_format="CSV",
                                       header_rows=1, delimiter=",", encoding="UTF-8",
+                                      ignore_unknown_values=False, max_bad_records=0,
                                       writing_mode="APPEND", create_table_if_needed=False, schema=None):
         """
         This is a private method used to prepare the job parameters for
@@ -576,6 +577,10 @@ class BigQueryTool(object):
         except ValueError:
             available_formats = list(source_format.keys())
             raise ValueError(f"Unsupported format {file_format}. Formats available: {available_formats}")
+
+        # Applying general parameters
+        job_config.ignore_unknown_values = ignore_unknown_values
+        job_config.max_bad_records = max_bad_records
 
         # Applying format specific parameters
         if file_format.upper() == "CSV":
@@ -626,6 +631,7 @@ class BigQueryTool(object):
 
     def upload_from_gcs(self, dataset, table, gs_path, file_format="CSV",
                         header_rows=1, delimiter=",", encoding="UTF-8",
+                        ignore_unknown_values=False, max_bad_records=0,
                         writing_mode="APPEND", create_table_if_needed=False, schema=None):
         """Uploads data from Google Cloud Storage directly to BigQuery.
 
@@ -643,6 +649,13 @@ class BigQueryTool(object):
 
         encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
         Defaults to 'UTF-8'.
+
+        ignore_unknown_values indicates if it should allow extra values that are not represented
+        in the table schema. If true, the extra values are ignored. If false, records with extra
+        columns are treated as bad records. Defaults to False.
+
+        max_bad_records is the maximum number of bad records allowed; if it exceeds this value,
+        it'll raise an error. Defalts to 0 (i.e. all values must be valid).
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
         Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'APPEND'):
@@ -678,6 +691,7 @@ class BigQueryTool(object):
 
     def upload_from_file(self, dataset, table, file_location, file_format="CSV",
                          header_rows=1, delimiter=",", encoding="UTF-8",
+                         ignore_unknown_values=False, max_bad_records=0,
                          writing_mode="APPEND", create_table_if_needed=False, schema=None):
         """Uploads data from a local file to BigQuery.
 
@@ -695,6 +709,13 @@ class BigQueryTool(object):
 
         encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
         Defaults to 'UTF-8'.
+
+        ignore_unknown_values indicates if it should allow extra values that are not represented
+        in the table schema. If true, the extra values are ignored. If false, records with extra
+        columns are treated as bad records. Defaults to False.
+
+        max_bad_records is the maximum number of bad records allowed; if it exceeds this value,
+        it'll raise an error. Defalts to 0 (i.e. all values must be valid).
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
         Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'APPEND'):

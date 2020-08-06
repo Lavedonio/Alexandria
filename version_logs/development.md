@@ -16,6 +16,12 @@
     - get_blob_info
     - list_blob_attributes
 
+## Modified functionalities:
+- bigquery_tools
+  - BigQueryTool
+    - upload_from_gcs
+    - upload_from_file
+
 ## Bug fixes:
 - GSheetsTool class was calling a unset attribute (self.spreadsheet) in an error message.
 - GSheetsTool wasn't setting the correct worksheet when setting by the sheet_url parameter in its \_\_init\_\_ and set_spreadsheet_by_url methods.
