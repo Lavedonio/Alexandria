@@ -23,6 +23,7 @@ This is the documentation for the gcloudstorage_tools modules and all its conten
   - [download_file(self, download_to=None, remote_filename=None, replace=False)](#download_fileself-download_tonone-remote_filenamenone-replacefalse)
   - [download_subfolder(self)](#download_subfolderself) _(Not Yet Implemented)_
   - [download_on_dataframe(self, \*\*kwargs)](#download_on_dataframeself-kwargs)
+  - [download_as_string(self, remote_filename=None, encoding="UTF-8")](#download_as_stringself-remote_filenamenone-encodingutf-8)
   - [delete_file(self)](#delete_fileself) _(Not Yet Implemented)_
   - [delete_subfolder(self)](#delete_subfolderself) _(Not Yet Implemented)_
 
@@ -226,7 +227,7 @@ gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
 path_contents = gs.list_contents()
 
 if len(path_contents) == 0:
-    s3.set_subfolder("logs/subfolder/")
+    gs.set_subfolder("logs/subfolder/")
 
     # When a specific bucket/ bucket + subfolder contains a lot of data,
     # that's when yielding the results may be more efficient.
@@ -348,6 +349,25 @@ df = gs.download_on_dataframe()
 # For a file with a weird layout, you may want to use some parameters to save some time in data treatment
 gs.select_file("weird_file.csv")
 df = gs.download_on_dataframe(sep=";", encoding="ISO-8859-1", decimal=",")
+```
+
+### download_as_string(self, remote_filename=None, encoding="UTF-8")
+Downloads a remote object directly into a Python string, avoiding it to have to be saved.
+
+Usage Example:
+```
+import json
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs.select_file("file.json")
+
+# Getting the file in a string format
+file_string = gs.download_as_string()
+
+# If its a JSON file, for example, you can pass the result to a json.load function
+py_dict = json.loads(file_string)
 ```
 
 ### delete_file(self)

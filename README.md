@@ -1,5 +1,7 @@
 # Instackup
-This Python library is an open source way to standardize and simplify connections with cloud-based tools and databases and commonly used tools in data manipulation and analysis.
+This Python library is an open source way to standardize and simplify connections with cloud-based tools, databases and commonly used tools in data manipulation and analysis. It can help BI teams by having a unified source code for local development and testing as well as remote production (automated scheduled run) environments.
+
+This package is compatible with Google Cloud Composer image `composer-1.11.1-airflow-1.10.9`.
 
 # Index
 
@@ -10,7 +12,7 @@ This Python library is an open source way to standardize and simplify connection
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.0.6 (alpha)**
+**Version 0.1.0 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -153,6 +155,7 @@ Check the documentation by clicking in each topic.
     - [download_file(self, download_to=None, remote_filename=None, replace=False)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_fileself-download_tonone-remote_filenamenone-replacefalse)
     - [download_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_subfolderself) _(Not Yet Implemented)_
     - [download_on_dataframe(self, \*\*kwargs)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_on_dataframeself-kwargs)
+    - [download_as_string(self, remote_filename=None, encoding="UTF-8")](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_as_stringself-remote_filenamenone-encodingutf-8)
     - [delete_file(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#delete_fileself) _(Not Yet Implemented)_
     - [delete_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#delete_subfolderself) _(Not Yet Implemented)_
 - [general_tools](https://github.com/Lavedonio/instackup/blob/master/docs/general_tools.md#general_tools)
@@ -173,17 +176,6 @@ Check the documentation by clicking in each topic.
     - [\_\_init\_\_(self, heroku_path="heroku", app=None, remote=None)](https://github.com/Lavedonio/instackup/blob/master/docs/heroku_tools.md#__init__self-heroku_pathheroku-appnone-remotenone)
     - [app_flag(self) @property](https://github.com/Lavedonio/instackup/blob/master/docs/heroku_tools.md#app_flagself-property)
     - [execute(self, cmd)](https://github.com/Lavedonio/instackup/blob/master/docs/heroku_tools.md#executeself-cmd)
-- [postgresql_tools](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#postgresql_tools)
-  - [PostgreSQLTool](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#postgresqltool)
-    - [\_\_init\_\_(self, connection='default')](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#__init__self-connectiondefault)
-    - [connect(self, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#connectself-fail_silentlyfalse)
-    - [commit(self)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#commitself)
-    - [rollback(self)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#rollbackself)
-    - [close_connection(self)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#close_connectionself)
-    - [execute_sql(self, command, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#execute_sqlself-command-fail_silentlyfalse)
-    - [query(self, sql_query, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#queryself-sql_query-fetch_through_pandastrue-fail_silentlyfalse)
-    - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse)
-    - [get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/postgresql_tools.md#get_all_db_infoself-get_json_infotrue-fetch_through_pandastrue-fail_silentlyfalse)
 - [redshift_tools](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#redshift_tools)
   - [RedShiftTool](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#redshifttool)
     - [\_\_init\_\_(self, connect_by_cluster=True)](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#__init__self-connect_by_clustertrue)
@@ -212,13 +204,30 @@ Check the documentation by clicking in each topic.
     - [download_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#download_subfolderself) _(Not Yet Implemented)_
     - [delete_file(self, filename, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#delete_fileself-filename-fail_silentlyfalse)
     - [delete_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#delete_subfolderself)
+- [sql_tools](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#sql_tools)
+  - [SQLTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#sqltool)
+    - [\_\_init\_\_(self, sql_type, filename=None, connection='default')](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#__init__self-sql_type-filenamenone-connectiondefault)
+    - [connect(self, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#connectself-fail_silentlyfalse)
+    - [commit(self)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#commitself)
+    - [rollback(self)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#rollbackself)
+    - [close_connection(self)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#close_connectionself)
+    - [execute_sql(self, command, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#execute_sqlself-command-fail_silentlyfalse)
+    - [query(self, sql_query, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#queryself-sql_query-fetch_through_pandastrue-fail_silentlyfalse)
+  - [SQLiteTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#sqlitetool)
+    - [\_\_init\_\_(self, filename=None)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#__init__self-filenamenone)
+    - [describe_table(self, table, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#describe_tableself-table-fetch_through_pandastrue-fail_silentlyfalse)
+  - [PostgreSQLTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#postgresqltool)
+    - [\_\_init\_\_(self, connection='default')](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#__init__self-connectiondefault)
+    - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse)
+    - [get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#get_all_db_infoself-get_json_infotrue-fetch_through_pandastrue-fail_silentlyfalse)
 
 # Version logs
 See what changed in every version.
 
-- [Development](https://github.com/Lavedonio/instackup/blob/master/version_logs/development.md#version-xxx-in-development)
+- Beta releases
+  - [Version 0.1.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.0-beta-current_release.md#version-010-beta) (current release)
 - Alpha releases
-  - [Version 0.0.6](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha-current_release.md#version-006-alpha) (current release)
+  - [Version 0.0.6](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha.md#version-006-alpha)
   - [Version 0.0.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.5-alpha.md#version-005-alpha)
   - [Version 0.0.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.4-alpha.md#version-004-alpha)
   - [Version 0.0.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.3-alpha.md#version-003-alpha)
