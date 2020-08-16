@@ -228,7 +228,7 @@ class GCloudStorageTool(object):
         if remote_path is None:
             remote_path = self.subfolder + os.path.basename(filename)
         else:
-            # Tries to parse as a S3 path. If it fails, ignores this part
+            # Tries to parse as a GS path. If it fails, ignores this part
             # and doesn't change the value of remote_path parameter
             try:
                 bucket, blob = parse_remote_uri(remote_path, "gs")
@@ -357,6 +357,18 @@ class GCloudStorageTool(object):
 
         logger.debug(f"gs path: {self.get_gs_path()}")
         return pd.read_csv(self.get_gs_path(), **kwargs)
+
+    def download_as_string(self, remote_filename=None, encoding="UTF-8"):
+        """Downloads a remote object directly into a Python string, avoiding it to have to be saved."""
+
+        if self.blob is None and remote_filename is None:
+            raise ValueError("No file selected. Set it with select_file method first or in the remote_filename parameter.")
+        elif remote_filename is None:
+            blob = self.blob
+        else:
+            blob = self.bucket.blob(self.subfolder + remote_filename)
+
+        return blob.download_as_string().decode(encoding)
 
     def delete_file(self):
         """Deletes file in Google Cloud Storage."""
