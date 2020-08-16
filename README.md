@@ -12,7 +12,7 @@ This package is compatible with Google Cloud Composer image `composer-1.11.1-air
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.1.0 (beta)**
+**Version 0.1.1 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -225,7 +225,8 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - Beta releases
-  - [Version 0.1.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.0-beta-current_release.md#version-010-beta) (current release)
+  - [Version 0.1.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.1-beta-current_release.md#version-011-beta) (current release)
+  - [Version 0.1.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.0-beta.md#version-010-beta)
 - Alpha releases
   - [Version 0.0.6](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha.md#version-006-alpha)
   - [Version 0.0.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.5-alpha.md#version-005-alpha)
