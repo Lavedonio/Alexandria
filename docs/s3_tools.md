@@ -1,5 +1,5 @@
 # s3_tools
-This is the documentation for the s3_tools modules and all its contents, with usage examples.
+This is the documentation for the s3_tools module and all its contents, with usage examples.
 
 # Index
 - [S3Tool](#s3tool)
@@ -22,12 +22,9 @@ This is the documentation for the s3_tools modules and all its contents, with us
 
 # Module Contents
 ## S3Tool
-This class handle most of the interaction needed with S3,
-so the base code becomes more readable and straightforward.
+This class handle most of the interaction needed with S3, so the base code becomes more readable and straightforward.
 
-To understand the S3 structure, you need to know it is not a hierarchical filesystem,
-it is only a key-value store, though the key is often used like a file path for organising data,
-prefix + filename. More information about this can be read in this StackOverFlow thread:
+To understand the S3 structure, you need to know it is not a hierarchical filesystem, it is only a key-value store, though the key is often used like a file path for organising data, prefix + filename. More information about this can be read in this StackOverFlow thread:
 https://stackoverflow.com/questions/52443839/s3-what-exactly-is-a-prefix-and-what-ratelimits-apply
 
 All that means is that while you may see a path as:
@@ -42,15 +39,12 @@ s3://bucket-1/folder1/sub1/file.csv
 root| bucket |         key        |
 ```
 
-A great (not directly related) thread that can help that sink in (and help understand some methods here)
-is this one: https://stackoverflow.com/questions/35803027/retrieving-subfolders-names-in-s3-bucket-from-boto3
+A great (not directly related) thread that can help that sink in (and help understand some methods here) is this one: https://stackoverflow.com/questions/35803027/retrieving-subfolders-names-in-s3-bucket-from-boto3
 
-In this class, all keys and keys prefix are being treated as a folder tree structure,
-since the reason for this to exists is to make the programmers interactions with S3
-easier to write and the code easier to read.
+In this class, all keys and keys prefix are being treated as a folder tree structure, since the reason for this to exists is to make the programmers interactions with S3 easier to write and the code easier to read.
 
 ### \_\_init\_\_(self, bucket=None, subfolder="", s3_path=None)
-Takes either a s3_path or both bucket name and subfolder name as parameters to set the current working directory. It also opens a connection with AWS S3.
+Takes either a _s3_path_ or both _bucket_ name and _subfolder_ name as parameters to set the current working directory. It also opens a connection with AWS S3.
 
 The paradigm of this class is that all the operations are done in the current working directory, so it is important to set the right path (you can reset it later, but still).
 
@@ -67,10 +61,10 @@ s3 = S3Tool(bucket="some_other_bucket", subfolder="some_subfolder/subpath/")
 ```
 
 ### bucket(self) @property
-Returns the bucket object from the client based on the bucket name given in \_\_init\_\_ or set_bucket
+Returns the bucket object from the client based on the _bucket_ name given in \_\_init\_\_ or set_bucket.
 
 ### set_bucket(self, bucket)
-Takes a string as a parameter to reset the bucket name and bucket object. It has no return value.
+Takes a string as a parameter to reset the _bucket_ name and bucket object. It has no return value.
 
 Usage Example:
 ```
@@ -86,7 +80,7 @@ print(s3.get_s3_path())
 ```
 
 ### set_subfolder(self, subfolder)
-Takes a string as a parameter to reset the subfolder name. It has no return value.
+Takes a string as the parameter to reset the _subfolder_ name. It has no return value.
 
 Usage Example:
 ```
@@ -102,7 +96,7 @@ print(s3.get_s3_path())
 ```
 
 ### set_by_path(self, s3_path)
-Takes a string as a parameter to reset the bucket name and subfolder name by its S3 path. It has no return value.
+Takes a string as the parameter to reset the bucket name and subfolder name by its S3 path. It has no return value.
 
 Usage Example:
 ```
@@ -144,7 +138,7 @@ s3.rename_file("new_name", "old_name")
 ```
 
 ### rename_subfolder(self, new_subfolder)
-Takes a string containing the new subfolder name and renames all keys in the currently set path, so the final result is similar to rename a subfolder. It has no return value.
+Takes a string containing the _new subfolder_ name and renames all keys in the currently set path, so the final result is similar to rename a subfolder. It has no return value.
 
 Usage Example:
 ```
@@ -161,7 +155,7 @@ s3.rename_subfolder(new_subfolder)
 ```
 
 ### list_all_buckets(self)
-Returns a list of all Buckets in S3. It takes no parameter.
+Returns a list of all buckets in S3. It takes no parameter.
 
 Usage Example:
 ```
@@ -207,10 +201,9 @@ if len(path_contents) == 0:
 ### upload_file(self, filename, remote_path=None)
 Uploads file to remote path in S3.
 
-remote_path can take either a full S3 path or a subfolder only one. It has no return value.
+_remote_path_ can take either a full S3 path or a subfolder only one. It has no return value.
 
-If the remote_path parameter is not set, it will default to whatever subfolder
-is set in instance of the class plus the file name that is being uploaded.
+If the _remote_path_ parameter is not set, it will default to whatever subfolder is set in instance of the class plus the _file name_ that is being uploaded.
 
 Usage Example:
 ```
@@ -233,10 +226,9 @@ Not implemented.
 ### download_file(self, remote_path, filename=None)
 Downloads remote S3 file to local path.
 
-remote_path can take either a full S3 path or a subfolder only one. It has no return value.
+_remote_path_ can take either a full S3 path or a subfolder only one. It has no return value.
 
-If the filename parameter is not set, it will default to whatever subfolder
-is set in instance of the class plus the file name that is being downloaded.
+If the _filename_ parameter is not set, it will default to whatever subfolder is set in instance of the class plus the file name that is being downloaded.
 
 Usage Example:
 ```
@@ -259,7 +251,7 @@ Not implemented.
 ### delete_file(self, filename, fail_silently=False)
 Deletes file from currently set path. It has no return value.
 
-Raises an error if file doesn't exist and fail_silently parameter is set to False.
+Raises an error if file doesn't exist and _fail_silently_ parameter is set to False.
 
 Usage Example:
 ```
@@ -279,8 +271,6 @@ s3.delete_file(file_location, fail_silently=True)
 
 ### delete_subfolder(self)
 Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder. It has no return value.
-
-Raises an error if file doesn't exist and fail_silently parameter is set to False.
 
 Once the subfolder is deleted, it resets to no extra path (empty subfolder name).
 

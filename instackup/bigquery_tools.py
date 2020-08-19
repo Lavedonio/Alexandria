@@ -138,7 +138,7 @@ class BigQueryTool(object):
         return result
 
     def query_and_save_results(self, sql_query, dest_dataset, dest_table, writing_mode="TRUNCATE", create_table_if_needed=False):
-        """Executes a query and saves the result in a table.
+        """Executes a query and saves the result in a table. It has no return value.
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
         Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'TRUNCATE'):
@@ -148,7 +148,7 @@ class BigQueryTool(object):
         - TRUNCATE: If the table already exists, BigQuery overwrites the table data.
 
         If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
-        Dafaults to False.
+        Defaults to False.
         """
 
         # Job preparation
@@ -292,7 +292,7 @@ class BigQueryTool(object):
             raise ValueError("Invalid return type. Valid options are 'dict', 'list' or 'dataframe'.")
 
     def get_table_schema(self, dataset, table):
-        """Gets schema information and returns a properly formatted dictionary."""
+        """Gets schema information from the given dataset and table and returns a properly formatted dictionary."""
 
         schema = {
             "fields": []
@@ -321,12 +321,12 @@ class BigQueryTool(object):
         return schema
 
     def convert_postgresql_table_schema(self, dataframe, parse_json_columns=True):
-        """Receives a dataframe containing schema information from exactly one table from PostgreSQL db
+        """Receives a Pandas DataFrame containing schema information from exactly one table from PostgreSQL db
         and converts it to a BigQuery schema format that can be used to upload data.
 
         If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
         If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type
-        columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+        columns, respectively, in the DataFrame. If those columns does not exist, this method will fail.
 
         Returns a dictionary containing the BigQuery formatted schema.
         """
@@ -429,12 +429,12 @@ class BigQueryTool(object):
         return schema
 
     def convert_multiple_postgresql_tables_schema(self, dataframe, parse_json_columns=True):
-        """Receives a dataframe containing schema information from exactly one or more tables from PostgreSQL db
-        and converts it to a BigQuery schema format that can be used to upload data.
+        """Receives a Pandas DataFrame containing schema information from one or more tables from
+        PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
 
         If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
         If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type
-        columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+        columns, respectively, in the DataFrame. If those columns does not exist, this method will fail.
 
         Returns a dictionary containing the table "full name" and the BigQuery formatted schema as key-value pairs.
         """
@@ -461,7 +461,11 @@ class BigQueryTool(object):
 
     def clean_dataframe_column_names(self, dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={}):
         """Replace dataframe columns to only contain chars allowed in BigQuery tables column name.
+
         special_treatment dictionary substitutes the terms in the keys by its value pair.
+
+        If a character is not in allowed_chars string parameter, neither in a key from the
+        special_treatment dictionary, it'll be replaced by an underscore (_).
         """
 
         column_map = {}
@@ -478,7 +482,7 @@ class BigQueryTool(object):
         return dataframe.rename(column_map, axis=1)
 
     def upload(self, dataframe, dataset, table, **kwargs):
-        """Prepare dataframe columns and executes an insert SQL command into BigQuery
+        """Clean the dataframe column names and executes a command equivalent of SQL "INSERT" into BigQuery.
 
         **kwargs are passed directly to pandas.to_gbq method.
         The complete documentation of this method can be found here:
@@ -642,7 +646,7 @@ class BigQueryTool(object):
         file_format can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
         header_rows, delimiter and encoding are only used when file_format is 'CSV'.
 
-        header_rows parameter determine the length in rows of the 'CSV' file given.
+        header_rows parameter determine the length in rows of the CSV header in the file given.
         Should be 0 if there are no headers in the file. Defaults to 1.
 
         delimiter determines the string character used to delimite the data. Defaults to ','.
@@ -651,14 +655,14 @@ class BigQueryTool(object):
         Defaults to 'UTF-8'.
 
         ignore_unknown_values indicates if it should allow extra values that are not represented
-        in the table schema. If true, the extra values are ignored. If false, records with extra
+        in the table schema. If True, the extra values are ignored. If False, records with extra
         columns are treated as bad records. Defaults to False.
 
         max_bad_records is the maximum number of bad records allowed; if it exceeds this value,
-        it'll raise an error. Defalts to 0 (i.e. all values must be valid).
+        it'll raise an error. Defaults to 0 (i.e. all values must be valid).
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
-        Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'APPEND'):
+        Does not apply if table doesn't exist. Can be 1 out of 3 types (defaults to 'APPEND'):
         - APPEND: If the table already exists, BigQuery appends the data to the table.
         - EMPTY: If the table already exists and contains data, a 'duplicate' error
                  is returned in the job result.
@@ -667,10 +671,10 @@ class BigQueryTool(object):
         If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
         Dafaults to False.
 
-        schema is either a list of dictionaries containing the schema information or
-        a dictionary encapsulating the previous list with a key of 'fields'.
-        This latter format can be found when directly importing the schema info from a JSON generated file.
-        If the file_format is either 'CSV' or 'JSON' or the table already exists, it can be ommited.
+        schema is either a list of dictionaries containing the schema information or a dictionary
+        encapsulating the previous list with a key of 'fields'. This latter format can be found
+        when directly importing the schema info from a JSON generated file. If the file_format
+        is either 'CSV' or 'JSON' or the table already exists, this parameter can be ommited.
         """
 
         # Setting Job configuration
@@ -702,7 +706,7 @@ class BigQueryTool(object):
         file_format can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
         header_rows, delimiter and encoding are only used when file_format is 'CSV'.
 
-        header_rows parameter determine the length in rows of the 'CSV' file given.
+        header_rows parameter determine the length in rows of the CSV header in the file given.
         Should be 0 if there are no headers in the file. Defaults to 1.
 
         delimiter determines the string character used to delimite the data. Defaults to ','.
@@ -711,14 +715,14 @@ class BigQueryTool(object):
         Defaults to 'UTF-8'.
 
         ignore_unknown_values indicates if it should allow extra values that are not represented
-        in the table schema. If true, the extra values are ignored. If false, records with extra
+        in the table schema. If True, the extra values are ignored. If False, records with extra
         columns are treated as bad records. Defaults to False.
 
         max_bad_records is the maximum number of bad records allowed; if it exceeds this value,
-        it'll raise an error. Defalts to 0 (i.e. all values must be valid).
+        it'll raise an error. Defaults to 0 (i.e. all values must be valid).
 
         writing_mode parameter determines how the data is going to be written in BigQuery.
-        Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'APPEND'):
+        Does not apply if table doesn't exist. Can be 1 out of 3 types (defaults to 'APPEND'):
         - APPEND: If the table already exists, BigQuery appends the data to the table.
         - EMPTY: If the table already exists and contains data, a 'duplicate' error
                  is returned in the job result.
@@ -727,10 +731,10 @@ class BigQueryTool(object):
         If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
         Dafaults to False.
 
-        schema is either a list of dictionaries containing the schema information or
-        a dictionary encapsulating the previous list with a key of 'fields'.
-        This latter format can be found when directly importing the schema info from a JSON generated file.
-        If the file_format is either 'CSV' or 'JSON' or the table already exists, it can be ommited.
+        schema is either a list of dictionaries containing the schema information or a dictionary
+        encapsulating the previous list with a key of 'fields'. This latter format can be found
+        when directly importing the schema info from a JSON generated file. If the file_format
+        is either 'CSV' or 'JSON' or the table already exists, this parameter can be ommited.
         """
 
         # Setting Job configuration

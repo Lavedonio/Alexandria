@@ -1,5 +1,5 @@
 # gsheets_tools
-This is the documentation for the gsheets_tools modules and all its contents, with usage examples.
+This is the documentation for the gsheets_tools module and all its contents, with usage examples.
 
 # Index
 - [GSheetsTool](#gsheetstool)
@@ -17,7 +17,10 @@ This class encapsulates the gspread module to ease the setup process and handle 
 ### \_\_init\_\_(self, sheet_url=None, sheet_key=None, sheet_gid=None, auth_mode='secret_key', read_only=False, scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'])
 Initialization takes either _sheet_url_ or _sheet_key_ and _sheet_gid_ parameters to first referenciate the worksheet.
 
-_auth_mode_ parameter can either be **secret_key**, which will look for the configured Secret Key, **oauth**, which will prompt a window requiring manual authentication, or **composer**, which will use the current environment to set the credentials to that project.
+_auth_mode_ parameter can be 1 out of 3 types:
+- secret_key: will look for the configured Secret Key,;
+- oauth: will prompt a window requiring manual authentication;
+- composer: will use the Google Cloud Composer environment (as long it's running in one) to set the credentials to that project.
 
 _read_only_ parameter will convert the scopes to their read only versions. That means that they will can only be seen or downloaded, but not edited.
 
@@ -36,7 +39,7 @@ sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="2140620
 ```
 
 ### set_spreadsheet_by_url(self, sheet_url)
-Set spreadsheet and worksheet attributes by the Spreadsheet URL.
+Set _spreadsheet_ and _worksheet_ attributes by the Spreadsheet URL.
 
 Usage example:
 ```
@@ -52,7 +55,7 @@ sheet.set_spreadsheet_by_url("https://docs.google.com/spreadsheets/d/0B7ciWr8lX8
 ```
 
 ### set_spreadsheet_by_key(self, sheet_key)
-Set spreadsheet attribute by the Spreadsheet key value.
+Set _spreadsheet_ attribute by the Spreadsheet key value.
 
 Usage example:
 ```
@@ -68,7 +71,7 @@ sheet.set_spreadsheet_by_key("0B7ciWr8lX8LTWjFMQW4yT2MtRlk")
 ```
 
 ### set_worksheet_by_id(self, sheet_gid)
-Set worksheet attribute by the Spreadsheet gid value.
+Set _worksheet_ attribute by the Spreadsheet gid value.
 
 Usage example:
 ```
@@ -85,7 +88,7 @@ sheet.set_worksheet_by_id("324336327")
 ```
 
 ### download(self)
-Download the selected worksheet into a Pandas DataFrame. Raises an error if no worksheet is set.
+Download the selected _worksheet_ into a Pandas DataFrame. Raises an error if no worksheet is set.
 
 Usage example:
 ```

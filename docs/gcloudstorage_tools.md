@@ -1,5 +1,5 @@
 # gcloudstorage_tools
-This is the documentation for the gcloudstorage_tools modules and all its contents, with usage examples.
+This is the documentation for the gcloudstorage_tools module and all its contents, with usage examples.
 
 # Index
 - [GCloudStorageTool](#gcloudstoragetool)
@@ -29,13 +29,12 @@ This is the documentation for the gcloudstorage_tools modules and all its conten
 
 # Module Contents
 ## GCloudStorageTool
-This class handle most of the interaction needed with Google Cloud Storage,
-so the base code becomes more readable and straightforward.
+This class handle most of the interaction needed with Google Cloud Storage, so the base code becomes more readable and straightforward.
 
 ### \_\_init\_\_(self, gs_path=None, bucket=None, subfolder="", filename=None, authenticate=True)
-Takes a either gs_path or bucket name (and if necessary also subfolder name and file name) as parameters to set the current working directory. It also opens a connection with Google Cloud Storage.
+Takes a either _gs_path_ or _bucket_ name (and if necessary also _subfolder_ name and _file name_) as parameters to set the current working directory. It also opens a connection with Google Cloud Storage.
 
-When setting by the gs_path, it will consider that a filename was given if the path doesn't end with a slash, i.e. `/`. If it does, it will consider that the path only has bucket and subfolder arguments. In this implementation, a subfolder **always** end with a slash (`/`).
+When setting by the _gs_path_, it will consider that a filename was given if the path doesn't end with a slash, i.e. `/`. If it does, it will consider that the path only has bucket and subfolder arguments. In this implementation, a subfolder **always** end with a slash (`/`).
 
 The paradigm of this class is that all the operations are done in the current working directory, so it is important to set the right path (you can reset it later, but still).
 
@@ -64,10 +63,12 @@ gs = GCloudStorageTool(bucket="some_other_bucket", subfolder="some_subfolder/sub
 Returns the bucket object from the client based on the bucket name given in \_\_init\_\_ or set_bucket.
 
 ### blob(self) @property
-Returns the blob object from the client based on the filename given in \_\_init\_\_ or select_file. If no filename was given, returns None.
+Returns the blob object from the client based on the _filename_ given in \_\_init\_\_ or select_file. If no _filename_ was given in \_\_init\_\_, returns None.
 
 ### set_bucket(self, bucket)
-Takes a string as a parameter to reset the bucket name and bucket object. It has no return value.
+Takes a string as a parameter to reset the _bucket_ name and bucket object. It has no return value.
+
+This method also resets the _subfolder_ and _filename_ attributes.
 
 **Warning:** this method doesn't check whether the bucket actually exists or not. This operation may not fail, but other methods and properties might do if the bucket doesn't exist.
 
@@ -76,8 +77,9 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/file.csv")
 
+# Note that it'll reset the subfolder and filename
 gs.set_bucket("some_other_bucket")
 
 # Check new path structure
@@ -87,7 +89,9 @@ print(gs.get_gs_path())
 ```
 
 ### set_subfolder(self, subfolder)
-Takes a string as a parameter to reset the subfolder name. It has no return value.
+Takes a string as the parameter to reset the _subfolder_ name. It has no return value.
+
+This method also resets the _filename_ attribute.
 
 **Warning:** this method doesn't check whether the subfolder path actually exists or not. This operation may not fail, but other methods and properties might do if the subfolder path doesn't exist.
 
@@ -96,8 +100,9 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/file.csv")
 
+# Note that it'll reset the filename
 gs.set_subfolder("some/more_complex/subfolder/structure/")
 
 # Check new path structure
@@ -107,7 +112,7 @@ print(gs.get_gs_path())
 ```
 
 ### select_file(self, filename)
-Takes a string as a parameter to set or reset the filename name. It has no return value.
+Takes a string as the parameter to set or reset the _filename_. It has no return value.
 
 **Warning:** this method doesn't check whether the file actually exists or not. This operation may not fail, but other methods and properties might do if the file doesn't exist.
 
@@ -127,7 +132,7 @@ print(gs.get_gs_path())
 ```
 
 ### set_by_path(self, gs_path)
-Takes a string as a parameter to reset the bucket name and subfolder name by its GS path. It has no return value.
+Takes a string as the parameter to reset the bucket name, subfolder name and filename by its GS path. It has no return value.
 
 **Warning:** this method doesn't check whether the given path actually exists or not. This operation may not fail, but other methods and properties might do if the gs path doesn't exist.
 
@@ -162,7 +167,7 @@ print(gs.get_gs_path())
 ```
 
 ### list_all_buckets(self)
-Returns a list of all Buckets in Google Cloud Storage. It takes no parameter.
+Returns a list of all buckets in Google Cloud Storage. It takes no parameter.
 
 Usage Example:
 ```
@@ -178,7 +183,13 @@ all_buckets = gs.list_all_buckets()
 ```
 
 ### get_bucket_info(self, bucket=None)
-Returns a dictionary with the information of Name, Datetime Created, Datetime Updated and Owner ID of the currently selected bucket (or the one passed in the parameters).
+Returns a dictionary with the information of the currently selected _bucket_ (or the one passed in the parameters).
+
+The fields contained in the returned dictionary are:
+- Name
+- TimeCreated
+- TimeUpdated
+- OwnerID
 
 Usage Example:
 ```
@@ -194,9 +205,23 @@ print(bucket_info)
 ### get_file_info(self, filename=None, info=None)
 Gets the remote file's information.
 
-If no filename is given, it uses the one already set (raises an error if no filename is set).
+If no _filename_ is given, it uses the one already set (raises an error if no filename is set).
 
-If an info parameter is given, returns only that info. If not, returns all file's information into a dictionary.
+If an _info_ parameter is given, returns only that info. If not, returns all file's information into a dictionary.
+
+The fields contained in the returned dictionary (and available) are:
+- Name
+- Bucket
+- ContentType
+- TimeCreated
+- TimeUpdated
+- TimeDeleted
+- Size
+- MD5
+- OwnerID
+- CRC32c
+- EncryptionAlgorithm
+- EncryptionKeySHA256
 
 Usage Example:
 ```
@@ -210,7 +235,7 @@ print(remote_file_info)
 ```
 
 ### list_contents(self, yield_results=False)
-Lists all files that correspond with bucket and subfolder set at the initialization.
+Lists all files that correspond with _bucket_ and _subfolder_ set at the initialization.
 
 It can either return a list or yield a generator. Lists can be more familiar to use, but when dealing with large amounts of data, yielding the results may be a better option in terms of efficiency.
 
@@ -246,10 +271,9 @@ Not implemented.
 ### upload_file(self, filename, remote_path=None)
 Uploads file to remote path in Google Cloud Storage (GS).
 
-remote_path can take either a full GS path or a subfolder only one.
+_remote_path_ can take either a full GS path or a subfolder only one.
 
-If the remote_path parameter is not set, it will default to whatever subfolder
-is set in instance of the class plus the file name that is being uploaded.
+If the _remote_path_ parameter is not set, it will default to whatever subfolder is set in instance of the class plus the file name that is being uploaded.
 
 Usage Example:
 ```
@@ -270,13 +294,13 @@ gs.upload_file(file_location, "another_subfolder/")  # Just subfolder
 Not implemented.
 
 ### upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, \*\*kwargs)
-Uploads a dataframe directly to a file in the file_format given without having to save the file. If no filename is given, it uses the one set in the blob and will fail if overwrite is set to False.
+Uploads a _dataframe_ directly to a file in the _file_format_ given without having to save the file. If no _filename_ is given, it uses the one set in the blob and will fail if _overwrite_ is set to False.
 
 File formats supported are:
 - CSV
 - JSON
 
-\*\*kwargs are passed directly to .to_csv or .to_json methods (according with the file format chosen).
+_\*\*kwargs_ are passed directly to pandas.to_csv or pandas.to_json methods (according with the file format chosen).
 
 The complete documentation of these methods can be found here:
 - CSV: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_csv.html
@@ -304,11 +328,11 @@ gs.upload_from_dataframe(df, overwrite=True)
 ### download_file(self, download_to=None, remote_filename=None, replace=False)
 Downloads remote gs file to local path.
 
-If download_to parameter is not set, it'll download the file to the current working directory.
+If _download_to_ parameter is not set, it'll download the file to the current working directory.
 
-If the remote_filename parameter is not set, it will default to the currently set.
+If the _remote_filename_ parameter is not set, it will default to the currently set.
 
-If replace is set to True and there is already a file downloaded with the same filename and path, it will replace the file. Otherwise it will raise an error.
+If _replace_ is set to True and there is already a file downloaded with the same filename and path, it will replace the file. Otherwise it will raise an error.
 
 Usage Example:
 ```
@@ -328,10 +352,10 @@ gs.download_file(download_to="C:\\Users\\USER\\Desktop\\file.csv", replace=True)
 Not implemented.
 
 ### download_on_dataframe(self, \*\*kwargs)
-Use currently file set information to download file and use it directly on a Pandas DataFrame
-without having to save the file.
+Use currently file set information to download file and use it directly on a Pandas DataFrame without having to save the file.
 
-\*\*kwargs are passed directly to pandas.read_csv method.
+_\*\*kwargs_ are passed directly to pandas.read_csv method.
+
 The complete documentation of this method can be found here:
 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
 

@@ -1,5 +1,5 @@
 # redshift_tools
-This is the documentation for the redshift_tools modules and all its contents, with usage examples.
+This is the documentation for the redshift_tools module and all its contents, with usage examples.
 
 # Index
 - [RedShiftTool](#redshifttool)
@@ -49,7 +49,7 @@ finally:
 Easy to see that it is recommended (and easier) to use the first syntax.
 
 ### \_\_init\_\_(self, connect_by_cluster=True)
-Initialization takes connect_by_cluster parameter that sets connection type and has no return value.
+Initialization takes _connect_by_cluster_ parameter, which sets connection type. It has no return value.
 
 The \_\_init\_\_ method doesn't actually opens the connection, but sets all values required by the connect method.
 
@@ -63,7 +63,7 @@ rs = RedShiftTool()
 ### connect(self, fail_silently=False)
 Create the connection using the \_\_init\_\_ attributes and returns its own object for with statement.
 
-If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+If _fail_silently_ parameter is set to True, any errors will be surpressed and not stop the code execution.
 
 Usage example:
 ```
@@ -170,9 +170,9 @@ with RedShiftTool() as rs:
 ```
 
 ### execute_sql(self, command, fail_silently=False)
-Execute a SQL command (CREATE, UPDATE and DROP). It has no return value.
+Execute a SQL _command_ (CREATE, UPDATE and DROP). It has no return value.
 
-If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+If _fail_silently_ parameter is set to True, any errors will be surpressed and not stop the code execution.
 
 Usage example:
 ```
@@ -221,9 +221,9 @@ with RedShiftTool() as rs:
 ### query(self, sql_query, fetch_through_pandas=True, fail_silently=False)
 Run a query and return the results.
 
-fetch_through_pandas parameter tells if the query should be parsed by psycopg2 cursor or pandas.
+_fetch_through_pandas_ parameter tells if the query should be parsed by psycopg2 cursor or pandas.
 
-If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+If _fail_silently_ parameter is set to True, any errors will be surpressed and not stop the code execution.
 
 Usage example:
 ```
@@ -267,7 +267,7 @@ with RedShiftTool() as rs:
 ### unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'")
 Executes an unload command in RedShift database to copy data to S3.
 
-Takes the parameters redshift_query to grab the data, s3_path to set the location of copied data, filename as the custom prefix of the file and unload options.
+Takes the parameters _redshift_query_ to grab the data, _s3_path_ to set the location of copied data, _filename_ as the custom prefix of the file and _unload_options_.
 
 Unload options can be better understood in this link: https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html
 

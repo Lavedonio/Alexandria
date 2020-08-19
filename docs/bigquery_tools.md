@@ -1,5 +1,5 @@
 # bigquery_tools
-This is the documentation for the bigquery_tools modules and all its contents, with usage examples.
+This is the documentation for the bigquery_tools module and all its contents, with usage examples.
 
 # Index
 - [Global Variables](#global-variables)
@@ -31,9 +31,9 @@ There are some global variables that can be accessed an edited by the user. Thos
 This class handle most of the interaction needed with BigQuery, so the base code becomes more readable and straightforward.
 
 ### \_\_init\_\_(self, authenticate=True)
-Initialization takes no parameter and has no return value. It sets the bigquery client.
+The initialization process sets the bigquery client.
 
-The _authenticate_ parameter set whether the initialization process will use the `fetch_credentials` method or not. This might be desired if the environment is already authenticated, for example in a Google Cloud Composer environment.
+The _authenticate_ parameter sets whether the initialization process will use the `fetch_credentials` function or not. This might be desired if the environment is already authenticated, for example in a Google Cloud Composer environment.
 
 Usage example:
 ```
@@ -59,17 +59,16 @@ df = bq.query(sql_query)
 ```
 
 ### query_and_save_results(self, sql_query, dest_dataset, dest_table, writing_mode="TRUNCATE", create_table_if_needed=False)
-Executes a query and saves the result in a table.
+Executes a query and saves the result in a table. It has no return value.
 
-writing_mode parameter determines how the data is going to be written in BigQuery.
+_writing_mode_ parameter determines how the data is going to be written in BigQuery.
 Does not apply if table doesn't exist. Can be one of 3 types (defaults to 'TRUNCATE'):
 - APPEND: If the table already exists, BigQuery appends the data to the table.
 - EMPTY: If the table already exists and contains data, a 'duplicate' error
          is returned in the job result.
 - TRUNCATE: If the table already exists, BigQuery overwrites the table data.
 
-If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
-Dafaults to False.
+If _create_table_if_needed_ is set to False and the table doesn't exist, it'll raise an error. Defaults to False.
 
 Usage example:
 ```
@@ -119,16 +118,16 @@ datasets = bq.create_dataset("google_analytics_reports")
 ### list_tables_in_dataset(self, dataset, get=None, return_type="dict")
 Lists all tables inside a dataset. Will fail if dataset doesn't exist.
 
-get parameter can be a string or list of strings. If only a string is passed,
+_get_ parameter can be a string or list of strings. If only a string is passed,
 will return a list of values of that attribute of all tables
 (this case overrides return_type parameter).
 
-Valid get parameters are:
+Valid _get_ parameters are:
 ["clustering_fields", "created", "dataset_id", "expires", "friendly_name",
 "full_table_id", "labels", "partition_expiration", "partitioning_type", "project",
 "reference", "table_id", "table_type", "time_partitioning", "view_use_legacy_sql"]
 
-return_type parameter can be 1 out of 3 types and sets how the result will be returned:
+_return_type_ parameter can be 1 out of 3 types and sets how the result will be returned:
 - dict: dictionary of lists, i.e., each key has a list of all tables values for that attribute.
         The same index for different attibutes refer to the same table;
 - list: list of dictionaries, i.e., each item in the list is a dictionary with all the attributes
@@ -156,7 +155,7 @@ print(df)
 ```
 
 ### get_table_schema(self, dataset, table)
-Gets schema information and returns a properly formatted dictionary.
+Gets schema information from the given _dataset_ and _table_ and returns a properly formatted dictionary.
 
 Usage example:
 ```
@@ -176,11 +175,11 @@ with open('data.json', 'w') as fp:
 ```
 
 ### convert_postgresql_table_schema(self, dataframe, parse_json_columns=True)
-Receives a dataframe containing schema information from exactly one table from PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
+Receives a Pandas DataFrame containing schema information from exactly one table from PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
 
-If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
+If _parse_json_columns_ is set to False, it'll ignore json and jsonb fields, setting them as STRING.
 
-If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type columns, respectively, in the DataFrame. If those columns does not exist, this method will fail.
 
 Returns a dictionary containing the BigQuery formatted schema.
 
@@ -203,14 +202,15 @@ schema = bq.convert_postgresql_table_schema(df)
 with open('data.json', 'w') as fp:
     json.dump(schema, fp, sort_keys=True, indent=4)
 ```
+
 ### convert_multiple_postgresql_tables_schema(self, dataframe, parse_json_columns=True)
-Receives a dataframe containing schema information from exactly one or more tables from PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
+Receives a Pandas DataFrame containing schema information from one or more tables from PostgreSQL db and converts it to a BigQuery schema format that can be used to upload data.
 
-If parse_json_columns is set to False, it'll ignore json and jsonb fields, setting them as STRING.
+If _parse_json_columns_ is set to False, it'll ignore json and jsonb fields, setting them as STRING.
 
-If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type columns, respectively, in the dataframe. If those columns does not exist, this method will fail.
+If it is set to True, it'll look for json and jsonb keys and value types in json_key and json_value_type columns, respectively, in the DataFrame. If those columns does not exist, this method will fail.
 
-Returns a dictionary containing the table "full name" and the BigQuery formatted schema as key-value pairs.
+Returns a dictionary containing the table "full name" and its respective BigQuery formatted schema as key-value pairs.
 
 Usage example:
 ```
@@ -236,9 +236,9 @@ for name, schema in schemas.items():
 ```
 
 ### convert_dataframe_to_numeric(dataframe, exclude_columns=[], \*\*kwargs)
-Transform all string type columns into floats, except those in exclude_columns list.
+Transform all string type columns into floats, except those in _exclude_columns_ list.
 
-\*\*kwargs are passed directly to pandas.to_numeric method.
+_\*\*kwargs_ are passed directly to _pandas.to_numeric_ method.
 The complete documentation of this method can be found here:
 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_numeric.html
 
@@ -263,9 +263,11 @@ print(df)
 ```
 
 ### clean_dataframe_column_names(dataframe, allowed_chars="abcdefghijklmnopqrstuvwxyz0123456789", special_treatment={})
-Replace dataframe columns to only contain chars allowed in BigQuery tables column name.
+Replace _dataframe_ column names to only contain chars allowed in BigQuery tables column name.
 
-special_treatment dictionary substitutes the terms in the keys by its value pair.
+_special_treatment_ dictionary substitutes the terms in the keys by its value pair.
+
+If a character is not in _allowed_chars_ string parameter, neither in a key from the _special_treatment_ dictionary, it'll be replaced by an underscore (\_).
 
 Usage example:
 ```
@@ -288,9 +290,9 @@ print(df)
 ```
 
 ### upload(self, dataframe, dataset, table, \*\*kwargs)
-Prepare dataframe columns and executes an insert SQL command into BigQuery.
+Clean the dataframe column names and executes a command equivalent of SQL "INSERT" into BigQuery.
 
-\*\*kwargs are passed directly to pandas.to_gbq method.
+_\*\*kwargs_ are passed directly to pandas.to_gbq method.
 The complete documentation of this method can be found here:
 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_gbq.html
 
@@ -315,7 +317,7 @@ bq.upload(df, dataset, table)
 ```
 
 ### create_empty_table(self, dataset, table, schema)
-Creates an empty table at dataset.table location, based on schema given.
+Creates an empty table at _dataset_._table_ location, based on _schema_ given.
 
 Usage example:
 ```
@@ -347,39 +349,34 @@ bq.create_empty_table(dataset, table, schema)
 ### upload_from_gcs(self, dataset, table, gs_path, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", ignore_unknown_values=False, max_bad_records=0, writing_mode="APPEND", create_table_if_needed=False, schema=None)
 Uploads data from Google Cloud Storage directly to BigQuery.
 
-dataset and table parameters determines the destination of the upload.
-gs_path parameter is the file location in Google Cloud Storage.
+_dataset_ and _table_ parameters determines the destination of the upload.
+_gs_path_ parameter is the file location in Google Cloud Storage.
 All 3 of them are required string parameters.
 
-file_format can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
-header_rows, delimiter and encoding are only used when file_format is 'CSV'.
+_file_format_ can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
+_header_rows_, _delimiter_ and _encoding_ are only used when _file_format_ is 'CSV'.
 
-header_rows parameter determine the length in rows of the 'CSV' file given.
+_header_rows_ parameter determine the length in rows of the CSV header in the file given.
 Should be 0 if there are no headers in the file. Defaults to 1.
 
-delimiter determines the string character used to delimite the data. Defaults to ','.
+_delimiter_ determines the string character used to delimite the data. Defaults to ','.
 
-encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
-Defaults to 'UTF-8'.
+_encoding_ tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1). Defaults to 'UTF-8'.
 
-ignore_unknown_values indicates if it should allow extra values that are not represented in the table schema. If true, the extra values are ignored. If false, records with extra columns are treated as bad records. Defaults to False.
+_ignore_unknown_values_ indicates if it should allow extra values that are not represented in the table schema. If True, the extra values are ignored. If False, records with extra columns are treated as bad records. Defaults to False.
 
-max_bad_records is the maximum number of bad records allowed; if it exceeds this value, it'll raise an error. Defalts to 0 (i.e. all values must be valid).
+_max_bad_records_ is the maximum number of bad records allowed; if it exceeds this value, it'll raise an error. Defaults to 0 (i.e. all values must be valid).
 
-writing_mode parameter determines how the data is going to be written in BigQuery.
-Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
+_writing_mode_ parameter determines how the data is going to be written in BigQuery.
+Does not apply if table doesn't exist. Can be 1 out of 3 types (defaults in 'APPEND'):
 - APPEND: If the table already exists, BigQuery appends the data to the table.
 - EMPTY: If the table already exists and contains data, a 'duplicate' error
          is returned in the job result.
 - TRUNCATE: If the table already exists, BigQuery overwrites the table data.
 
-If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
-Dafaults to False.
+If _create_table_if_needed_ is set to False and the table doesn't exist, it'll raise an error. Dafaults to False.
 
-schema is either a list of dictionaries containing the schema information or
-a dictionary encapsulating the previous list with a key of 'fields'.
-This latter format can be found when directly importing the schema info from a JSON generated file.
-If the file_format is either 'CSV' or 'JSON' or the table already exists, it can be ommited.
+_schema_ is either a list of dictionaries containing the schema information or a dictionary encapsulating the previous list with a key of 'fields'. This latter format can be found when directly importing the schema info from a JSON generated file. If the file_format is either 'CSV' or 'JSON' or the table already exists, this parameter can be ommited.
 
 Usage example:
 ```
@@ -402,39 +399,34 @@ bq.upload_from_gcs(dataset, table, gs_path, file_format="JSON", create_table_if_
 ### upload_from_file(self, dataset, table, file_location, file_format="CSV", header_rows=1, delimiter=",", encoding="UTF-8", ignore_unknown_values=False, max_bad_records=0, writing_mode="APPEND", create_table_if_needed=False, schema=None)
 Uploads data from a local file to BigQuery.
 
-dataset and table parameters determines the destination of the upload.
-file_location parameter is either the file full or relative path in the local computer.
+_dataset_ and _table_ parameters determines the destination of the upload.
+_file_location_ parameter is either the file full or relative path in the local computer.
 All 3 of them are required string parameters.
 
-file_format can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
-header_rows, delimiter and encoding are only used when file_format is 'CSV'.
+_file_format_ can be either 'AVRO', 'CSV', 'JSON', 'ORC' or 'PARQUET'. Defaults to 'CSV'.
+_header_rows_, _delimiter_ and _encoding_ are only used when _file_format_ is 'CSV'.
 
-header_rows parameter determine the length in rows of the 'CSV' file given.
+_header_rows_ parameter determine the length in rows of the CSV header in the file given.
 Should be 0 if there are no headers in the file. Defaults to 1.
 
-delimiter determines the string character used to delimite the data. Defaults to ','.
+_delimiter_ determines the string character used to delimite the data. Defaults to ','.
 
-encoding tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1).
-Defaults to 'UTF-8'.
+_encoding_ tells the file encoding. Can be either 'UTF-8' or 'ISO-8859-1' (latin-1). Defaults to 'UTF-8'.
 
-ignore_unknown_values indicates if it should allow extra values that are not represented in the table schema. If true, the extra values are ignored. If false, records with extra columns are treated as bad records. Defaults to False.
+_ignore_unknown_values_ indicates if it should allow extra values that are not represented in the table schema. If True, the extra values are ignored. If False, records with extra columns are treated as bad records. Defaults to False.
 
-max_bad_records is the maximum number of bad records allowed; if it exceeds this value, it'll raise an error. Defalts to 0 (i.e. all values must be valid).
+_max_bad_records_ is the maximum number of bad records allowed; if it exceeds this value, it'll raise an error. Defaults to 0 (i.e. all values must be valid).
 
-writing_mode parameter determines how the data is going to be written in BigQuery.
-Does not apply if table doesn't exist. Can be one of 3 types (defaults in 'APPEND'):
+_writing_mode_ parameter determines how the data is going to be written in BigQuery.
+Does not apply if table doesn't exist. Can be 1 out of 3 types (defaults in 'APPEND'):
 - APPEND: If the table already exists, BigQuery appends the data to the table.
 - EMPTY: If the table already exists and contains data, a 'duplicate' error
          is returned in the job result.
 - TRUNCATE: If the table already exists, BigQuery overwrites the table data.
 
-If create_table_if_needed is set to False and the table doesn't exist, it'll raise an error.
-Dafaults to False.
+If _create_table_if_needed_ is set to False and the table doesn't exist, it'll raise an error. Dafaults to False.
 
-schema is either a list of dictionaries containing the schema information or
-a dictionary encapsulating the previous list with a key of 'fields'.
-This latter format can be found when directly importing the schema info from a JSON generated file.
-If the file_format is either 'CSV' or 'JSON' or the table already exists, it can be ommited.
+_schema_ is either a list of dictionaries containing the schema information or a dictionary encapsulating the previous list with a key of 'fields'. This latter format can be found when directly importing the schema info from a JSON generated file. If the file_format is either 'CSV' or 'JSON' or the table already exists, this parameter can be ommited.
 
 Usage example:
 ```
@@ -456,6 +448,7 @@ bq.upload_from_file(dataset, table, file_location, create_table_if_needed=True, 
 
 ### start_transfer(self, project_path=None, project_name=None, transfer_name=None)
 Takes a project path or both project name and transfer name to trigger a transfer to start executing in BigQuery Transfer. Returns a status indicating if the request was processed (if it does, the response should be 'PENDING').
+
 API documentation: https://googleapis.dev/python/bigquerydatatransfer/latest/gapic/v1/api.html
 
 Usage example:

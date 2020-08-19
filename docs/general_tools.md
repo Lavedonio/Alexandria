@@ -1,5 +1,5 @@
 # general_tools
-This is the documentation for the general_tools modules and all its contents, with usage examples.
+This is the documentation for the general_tools module and all its contents, with usage examples.
 
 # Index
 - [fetch_credentials(service_name, \*\*kwargs)](#fetch_credentialsservice_name-kwargs)
@@ -9,7 +9,7 @@ This is the documentation for the general_tools modules and all its contents, wi
 
 # Module Contents
 ## fetch_credentials(service_name, \*\*kwargs)
-Gets the credentials from the secret file set in `CREDENTIALS_HOME` variable and returns the credentials of the selected service in a dictionary. If service is "credentials_path", a path is returned instead.
+Gets the credentials from the secret file set in `CREDENTIALS_HOME` variable and returns its selected service, which is defined by the _service_name_ parameter, in a dictionary. If service is "credentials_path", the path for the directory where the secret file is located is returned instead.
 
 It's mainly meant to be used by the other modules, but it can be used to retrieve other credentials in order to stardardize the local and remote code execution.
 
@@ -66,9 +66,10 @@ print(ascii_data)  # output: >>> ncaaaaeeeiooouu ncaaaaeeeiooouu
 
 ## parse_remote_uri(uri, service)
 Parses a Google Cloud Storage (GS) or an Amazon S3 path into bucket and subfolder(s).
-Raises an error if path is with wrong format.
 
-service parameter can be either "gs" or "s3"
+_service_ parameter can be either "gs" or "s3".
+
+Raises an error if path is with wrong format.
 
 Usage example:
 ```

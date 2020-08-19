@@ -308,7 +308,6 @@ class S3Tool(object):
 
     def delete_subfolder(self):
         """Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder.
-        Raises an error if file doesn't exist and fail_silently parameter is set to False.
         Once the subfolder is deleted, it resets to no extra path (empty subfolder name)."""
 
         contents = self.list_contents()

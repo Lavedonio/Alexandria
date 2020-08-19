@@ -208,15 +208,15 @@ class PostgreSQLTool(SQLTool):
         """Gets all Database info, using a INFORMATION_SCHEMA query.
         Ignore table pg_stat_statements and tables inside schemas pg_catalog and information_schema.
 
-        If get_json_info parameter is True, it adds 2 columns to add the data types from each key
+        If get_json_info parameter is True, it adds 2 columns with the data types from each key
         inside json and jsonb columns.
 
         fetch_through_pandas and fail_silently parameters are passed directly to the query method if
         get_json_info parameter is set to False; if it's not, these 2 parameters are passed as their default values.
 
-        Returns either a Dataframe if get_json_info or fetch_through_pandas parameters are set to True,
-        or a list of tuples, each representing a row, with their position in the same order as in the columns
-        of the INFORMATION_SCHEMA.COLUMNS table.
+        Returns a DataFrame if either get_json_info or fetch_through_pandas parameters are set to True;
+        otherwise returns a list of tuples, each representing a row, with their position in the same order
+        as in the columns of the INFORMATION_SCHEMA.COLUMNS table.
         """
 
         sql_query = """SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name != 'pg_stat_statements' AND table_schema NOT IN ('pg_catalog', 'information_schema')"""

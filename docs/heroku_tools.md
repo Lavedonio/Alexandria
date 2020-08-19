@@ -1,5 +1,5 @@
 # heroku_tools
-This is the documentation for the heroku_tools modules and all its contents, with usage examples.
+This is the documentation for the heroku_tools module and all its contents, with usage examples.
 
 # Index
 - [HerokuTool](#herokutool)
@@ -12,7 +12,7 @@ This is the documentation for the heroku_tools modules and all its contents, wit
 This class encapsulates and handle most of the interaction needed with Heroku CLI, so the base code becomes more readable and straightforward.
 
 ### \_\_init\_\_(self, heroku_path="heroku", app=None, remote=None)
-Initialization takes an optional parameter _heroku_path_ that's either the PATH variable or the actual path to the CLI app location in the system.
+Initialization takes the optional parameter _heroku_path_ that's either the PATH variable or the actual path to the CLI app location in the system.
 
 It also takes 2 extra optional parameters: _app_ and _remote_ that specify the current app in use. Doesn't need to fill both, just one is ok. If there's only one registered app, these parameter don't need to be filled.
 

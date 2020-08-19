@@ -1,5 +1,5 @@
 # sql_tools
-This is the documentation for the sql_tools modules and all its contents, with usage examples.
+This is the documentation for the sql_tools module and all its contents, with usage examples.
 
 # Index
 - [SQLTool](#sqltool)
@@ -55,7 +55,7 @@ finally:
 Easy to see that it is recommended (and easier) to use the first syntax.
 
 ### \_\_init\_\_(self, sql_type, filename=None, connection='default')
-Initialization takes sql_type parameter, which sets the kind of database it's going to access, filename parameter, which is only used if the sql_type is "SQLite", and connection parameter, that select which connection to use.
+Initialization takes _sql_type_ parameter, which sets the kind of database it's going to access, _filename_ parameter, which is only used if the sql_type is "SQLite", and _connection_ parameter, that select which connection to use.
 
 It has no return value.
 
@@ -71,7 +71,7 @@ db = SQLTool("SQLite")
 ### connect(self, fail_silently=False)
 Create the connection using the \_\_init\_\_ attributes and returns its own object for with statement.
 
-If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+If _fail_silently_ parameter is set to True, any errors will be surpressed and not stop the code execution.
 
 Usage example:
 ```
@@ -178,9 +178,9 @@ with SQLTool("SQLite") as db:
 ```
 
 ### execute_sql(self, command, fail_silently=False)
-Execute a SQL command (CREATE, UPDATE and DROP). It has no return value.
+Execute a SQL _command_ (CREATE, UPDATE and DROP). It has no return value.
 
-If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+If _fail_silently_ parameter is set to True, any errors will be surpressed and not stop the code execution.
 
 Usage example:
 ```
@@ -197,7 +197,7 @@ sql_cmd = """CREATE TABLE test (
 """
 
 
-db = SQLTool("SQLite")
+db = SQLTool("PostgreSQL")
 db.connect()
 
 try:
@@ -229,9 +229,9 @@ with SQLTool("PostgreSQL") as db:
 ### query(self, sql_query, fetch_through_pandas=True, fail_silently=False)
 Run a query and return the results.
 
-fetch_through_pandas parameter tells if the query should be parsed by the cursor or pandas.
+_fetch_through_pandas_ parameter tells if the query should be parsed by the cursor or pandas.
 
-If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution.
+If _fail_silently_ parameter is set to True, any errors will be surpressed and not stop the code execution.
 
 Usage example:
 ```
@@ -273,7 +273,7 @@ with SQLTool("SQLite") as db:
 ```
 
 ## SQLiteTool
-This class handle most of the interaction needed with SQLite3 databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read that class documentation for more info.
+This class handle most of the interaction needed with SQLite3 databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read the documentation of the base class for more info.
 
 This class implements the with statement, so there are 2 ways of using it.
 
@@ -308,7 +308,7 @@ finally:
 Easy to see that it is recommended (and easier) to use the first syntax.
 
 ### \_\_init\_\_(self, filename=None)
-Initialization takes filename parameter that select which SQLite3 database file to use; if it's not set, creates an temporary in-memory database. It has no return value.
+Initialization takes the _filename_ parameter, that selects which SQLite3 database file to use; if it's not set, creates an temporary in-memory database. It has no return value.
 
 The \_\_init\_\_ method doesn't actually opens the connection, but sets all values required by the connect method.
 
@@ -320,7 +320,7 @@ sl = SQLiteTool(filename='db.sqlite3')
 ```
 
 ### describe_table(self, table, fetch_through_pandas=True, fail_silently=False)
-Special query that returns all metadata from a specific table
+Special query that returns all metadata from a specific _table_.
 
 Usage example:
 ```
@@ -358,7 +358,7 @@ with SQLiteTool() as sl:
 ```
 
 ## PostgreSQLTool
-This class handle most of the interaction needed with PostgreSQL databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read that class documentation for more info.
+This class handle most of the interaction needed with PostgreSQL databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read the documentation of the base class for more info.
 
 This class implements the with statement, so there are 2 ways of using it.
 
@@ -393,7 +393,7 @@ finally:
 Easy to see that it is recommended (and easier) to use the first syntax.
 
 ### \_\_init\_\_(self, connection='default')
-Initialization takes connection parameter that select which connection to use. It has no return value.
+Initialization takes _connection_ parameter, that selects which connection to use. It has no return value.
 
 The \_\_init\_\_ method doesn't actually opens the connection, but sets all values required by the connect method.
 
@@ -405,7 +405,7 @@ pg = PostgreSQLTool(connection='default')
 ```
 
 ### describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)
-Special query that returns all metadata from a specific table
+Special query that returns all metadata from a specific table.
 
 Usage example:
 ```
@@ -447,11 +447,11 @@ Gets all Database info, using a INFORMATION_SCHEMA query.
 
 Ignore table pg_stat_statements and tables inside schemas pg_catalog and information_schema.
 
-If get_json_info parameter is True, it adds 2 columns to add the data types from each key inside json and jsonb columns.
+If _get_json_info_ parameter is True, it adds 2 columns with the data types from each key inside json and jsonb columns.
 
-fetch_through_pandas and fail_silently parameters are passed directly to the query method if get_json_info parameter is set to False; if it's not, these 2 parameters are passed as their default values.
+_fetch_through_pandas_ and _fail_silently_ parameters are passed directly to the _query_ method if _get_json_info_ parameter is set to False; if it's not, these 2 parameters are passed as their default values.
 
-Returns either a Dataframe if get_json_info or fetch_through_pandas parameters are set to True, or a list of tuples, each representing a row, with their position in the same order as in the columns of the INFORMATION_SCHEMA.COLUMNS table.
+Returns a DataFrame if either _get_json_info_ or _fetch_through_pandas_ parameters are set to True; otherwise returns a list of tuples, each representing a row, with their position in the same order as in the columns of the INFORMATION_SCHEMA.COLUMNS table.
 
 Usage example:
 ```

@@ -20,9 +20,11 @@ logger.addHandler(file_handler)
 
 
 def fetch_credentials(service_name, **kwargs):
-    """Gets the credentials from the secret file set in CREDENTIALS_HOME variable
-    and returns the credentials of the selected service in a dictionary.
-    If service is "credentials_path", a path is returned instead.
+    """Gets the credentials from the secret file set in CREDENTIALS_HOME variable and
+    returns its selected service, which is defined by the service_name parameter, in a dictionary.
+
+    If service is "credentials_path", the path for the directory where
+    the secret file is located is returned instead.
 
     Parses only 1 kwargs, not necessarily in order. Others are discarded.
     """
