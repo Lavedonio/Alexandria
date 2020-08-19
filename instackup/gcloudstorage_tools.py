@@ -39,6 +39,9 @@ class GCloudStorageTool(object):
             else:
                 filename = None
                 bucket, subfolder = parse_remote_uri(gs_path, "gs")
+        else:
+            ending_slash = "/" if subfolder[-1:] != '/' and len(subfolder) > 0 else ""
+            subfolder += ending_slash
 
         if authenticate:
             # Getting credentials
@@ -79,9 +82,13 @@ class GCloudStorageTool(object):
 
     def set_bucket(self, bucket):
         self.bucket_name = bucket
+        self.subfolder = ""   # Resets subfolder
+        self.filename = None  # Resets filename
 
     def set_subfolder(self, subfolder):
-        self.subfolder = subfolder
+        ending_slash = "/" if subfolder[-1:] != '/' and len(subfolder) > 0 else ""
+        self.subfolder = subfolder + ending_slash
+        self.filename = None  # Resets filename
 
     def select_file(self, filename):
         self.filename = filename
