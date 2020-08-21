@@ -2,8 +2,8 @@ import os
 import logging
 import boto3
 import psycopg2
-import pandas as pd
 from .general_tools import fetch_credentials
+from .sql_tools import PostgreSQLTool
 
 
 # Logging Configuration
@@ -20,7 +20,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-class RedShiftTool(object):
+class RedShiftTool(PostgreSQLTool):
     """This class handle most of the interaction needed with RedShift,
     so the base code becomes more readable and straightforward."""
 
@@ -62,6 +62,9 @@ class RedShiftTool(object):
         self.connection = None
         self.cursor = None
 
+        # Not used, but making it compatible with inherited class
+        self.filename = None
+
     def connect(self, fail_silently=False):
         """Create the connection using the __init__ attributes.
         If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution."""
@@ -98,71 +101,6 @@ class RedShiftTool(object):
             else:
                 logger.error("ATENTION: Failing Silently")
 
-    def commit(self):
-        """Commit any pending transaction to the database."""
-        self.connection.commit()
-        logger.info("Transaction commited.")
-
-    def rollback(self):
-        """Roll back to the start of any pending transaction."""
-        self.connection.rollback()
-        logger.info("Roll back current transaction.")
-
-    def execute_sql(self, command, fail_silently=False):
-        """Execute a SQL command (CREATE, UPDATE and DROP).
-        If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution."""
-
-        try:
-            self.cursor.execute(command)
-            logger.debug(f"Command Executed: {command}")
-
-        except psycopg2.Error as e:
-            logger.exception("Error running command!")
-
-            if not fail_silently:
-                raise e
-            else:
-                logger.error("ATENTION: Failing Silently")
-
-    def query(self, sql_query, fetch_through_pandas=True, fail_silently=False):
-        """Run a query and return the results.
-        fetch_through_pandas parameter tells if the query should be parsed by psycopg2 cursor or pandas.
-        If fail_silently parameter is set to True, any errors will be surpressed and not stop the code execution."""
-
-        # Eliminating SQL table quotes that can't be handled by RedShift
-        sql_query = sql_query.replace("`", "")
-
-        if fetch_through_pandas:
-            try:
-                result = pd.read_sql_query(sql_query, self.connection)
-
-            except (psycopg2.Error, pd.io.sql.DatabaseError) as e:
-                logger.exception("Error running query!")
-                result = None
-
-                if not fail_silently:
-                    raise e
-                else:
-                    logger.error("ATENTION: Failing Silently")
-
-        else:
-            try:
-                self.cursor.execute(sql_query)
-                logger.debug(f"Query Executed: {sql_query}")
-
-                result = self.cursor.fetchall()
-
-            except psycopg2.Error as e:
-                logger.exception("Error running query!")
-                result = None
-
-                if not fail_silently:
-                    raise e
-                else:
-                    logger.error("ATENTION: Failing Silently")
-
-        return result
-
     def unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'"):
         """Executes an unload command in RedShift database to copy data to S3.
         Takes the parameters redshift_query to grab the data, s3_path to set the location of copied data,
@@ -185,24 +123,3 @@ class RedShiftTool(object):
 
         logger.debug("Unloading Query...")
         self.execute_sql(unload_query)
-
-    def close_connection(self):
-        """Closes Connection with RedShift database"""
-        self.connection.close()
-        logger.info("Connection closed.")
-
-    # __enter__ and __exit__ functions for with statement.
-    # With statement docs: https://docs.python.org/2.5/whatsnew/pep-343.html
-    def __enter__(self):
-        return self.connect()
-
-    def __exit__(self, type, value, traceback):
-        if traceback is None:
-            # No exception, so commit
-            self.commit()
-        else:
-            # Exception occurred, so rollback.
-            self.rollback()
-            # return False
-
-        self.close_connection()

@@ -10,6 +10,8 @@ This is the documentation for the redshift_tools module and all its contents, wi
   - [close_connection(self)](#close_connectionself)
   - [execute_sql(self, command, fail_silently=False)](#execute_sqlself-command-fail_silentlyfalse)
   - [query(self, sql_query, fetch_through_pandas=True, fail_silently=False)](#queryself-sql_query-fetch_through_pandastrue-fail_silentlyfalse)
+  - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse)
+  - [get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)](#get_all_db_infoself-get_json_infotrue-fetch_through_pandastrue-fail_silentlyfalse)
   - [unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'")](#unload_to_s3self-redshift_query-s3_path-filename-unload_optionsmanifest-gzip-allowoverwrite-region-us-east-2)
 
 # Module Contents
@@ -260,6 +262,90 @@ with RedShiftTool() as rs:
     df = rs.query(sql_cmd)
 
     # To do operations with dataframe, you'll need to import pandas library
+
+    # other code
+```
+
+### describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)
+Special query that returns all metadata from a specific table.
+
+Usage example:
+```
+from instackup.redshift_tools import RedShiftTool
+
+
+rs = RedShiftTool()
+rs.connect()
+
+try:
+    # Returns a list of tuples containing the rows of the response (Table: public.users)
+    table = rs.describe_table("users", fetch_through_pandas=False, fail_silently=True)
+
+    # Do something with table variable
+
+except Exception as e:
+    rs.rollback()
+    raise e
+else:
+    rs.commit()
+finally:
+    # remember to close the connection later
+    rs.close_connection()
+
+# or
+
+with RedShiftTool() as rs:
+    # Already connected, use rs object in this context
+
+    # Returns a Pandas dataframe with all schema info of that specific schema.table
+    # To do operations with dataframe, you'll need to import pandas library
+    df = rs.describe_table("airflow_logs", schema="another_schema")
+
+    # other code
+```
+
+### get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)
+Gets all Database info, using a INFORMATION_SCHEMA query.
+
+Ignore table pg_stat_statements and tables inside schemas pg_catalog and information_schema.
+
+If _get_json_info_ parameter is True, it adds 2 columns with the data types from each key inside json and jsonb columns.
+
+_fetch_through_pandas_ and _fail_silently_ parameters are passed directly to the _query_ method if _get_json_info_ parameter is set to False; if it's not, these 2 parameters are passed as their default values.
+
+Returns a DataFrame if either _get_json_info_ or _fetch_through_pandas_ parameters are set to True; otherwise returns a list of tuples, each representing a row, with their position in the same order as in the columns of the INFORMATION_SCHEMA.COLUMNS table.
+
+Usage example:
+```
+from instackup.redshift_tools import RedShiftTool
+
+
+rs = RedShiftTool()
+rs.connect()
+
+try:
+    # Returns a list of tuples containing the rows of the response
+    schema_info = rs.get_all_db_info(get_json_info=False, fetch_through_pandas=False, fail_silently=True)
+
+    # Do something with table variable
+
+except Exception as e:
+    rs.rollback()
+    raise e
+else:
+    rs.commit()
+finally:
+    # remember to close the connection later
+    rs.close_connection()
+
+# or
+
+with RedShiftTool() as rs:
+    # Already connected, use rs object in this context
+
+    # Returns a Pandas dataframe with all schema info, including inside JSON and JSONB fields
+    # To do operations with dataframe, you'll need to import pandas library
+    df = rs.get_all_db_info()
 
     # other code
 ```

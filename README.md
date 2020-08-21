@@ -1,8 +1,6 @@
 # Instackup
 This Python library is an open source way to standardize and simplify connections with cloud-based tools, databases and commonly used tools in data manipulation and analysis. It can help BI teams by having a unified source code for local development and testing as well as remote production (automated scheduled run) environments.
 
-This package is compatible with Google Cloud Composer image `composer-1.11.1-airflow-1.10.9`.
-
 # Index
 
 - [Current release](#current-release)
@@ -12,7 +10,7 @@ This package is compatible with Google Cloud Composer image `composer-1.11.1-air
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.1.1 (beta)**
+**Version 0.1.2 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -185,6 +183,8 @@ Check the documentation by clicking in each topic.
     - [close_connection(self)](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#close_connectionself)
     - [execute_sql(self, command, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#execute_sqlself-command-fail_silentlyfalse)
     - [query(self, sql_query, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#queryself-sql_query-fetch_through_pandastrue-fail_silentlyfalse)
+    - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse)
+    - [get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#get_all_db_infoself-get_json_infotrue-fetch_through_pandastrue-fail_silentlyfalse)
     - [unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'")](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#unload_to_s3self-redshift_query-s3_path-filename-unload_optionsmanifest-gzip-allowoverwrite-region-us-east-2)
 - [s3_tools](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#s3_tools)
   - [S3Tool](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#s3tool)
@@ -225,7 +225,8 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - Beta releases
-  - [Version 0.1.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.1-beta-current_release.md#version-011-beta) (current release)
+  - [Version 0.1.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.2-beta-current_release.md#version-011-beta) (current release)
+  - [Version 0.1.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.1-beta.md#version-011-beta)
   - [Version 0.1.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.0-beta.md#version-010-beta)
 - Alpha releases
   - [Version 0.0.6](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.0.6-alpha.md#version-006-alpha)
