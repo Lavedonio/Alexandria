@@ -24,21 +24,21 @@ class GCloudStorageTool(object):
     """This class handle most of the interaction needed with Google Cloud Storage,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, gs_path=None, bucket=None, subfolder="", filename=None, authenticate=True):
-        if all(param is not None for param in [bucket, gs_path]):
+    def __init__(self, uri=None, bucket=None, subfolder="", filename=None, authenticate=True):
+        if all(param is not None for param in [bucket, uri]):
             logger.error("Specify either bucket name or full Google Cloud Storage path.")
             raise ValueError("Specify either bucket name or full Google Cloud Storage path.")
 
-        # If a gs_path is set, it will find the bucket and subfolder.
+        # If an URI is set, it will find the bucket and subfolder.
         # Even if all parameters are set, it will overwrite the given bucket and subfolder parameters.
         # That means it will have a priority over the other parameters.
-        if gs_path is not None:
-            if gs_path[:-1] != "/":
-                partial_gs_path, filename = os.path.split(gs_path)
-                bucket, subfolder = parse_remote_uri(partial_gs_path, "gs")
+        if uri is not None:
+            if uri[:-1] != "/":
+                partial_uri, filename = os.path.split(uri)
+                bucket, subfolder = parse_remote_uri(partial_uri, "gs")
             else:
                 filename = None
-                bucket, subfolder = parse_remote_uri(gs_path, "gs")
+                bucket, subfolder = parse_remote_uri(uri, "gs")
         else:
             ending_slash = "/" if subfolder[-1:] != '/' and len(subfolder) > 0 else ""
             subfolder += ending_slash
@@ -72,6 +72,13 @@ class GCloudStorageTool(object):
         self._bucket = self.client.get_bucket(self.bucket_name)
         return self._bucket
 
+    @bucket.setter
+    def bucket(self, bucket_name):
+        self.bucket_name = bucket_name
+        self.subfolder = ""   # Resets subfolder
+        self.filename = None  # Resets filename
+        self._bucket = self.client.get_bucket(self.bucket_name)
+
     @property
     def blob(self):
         if self.filename is None:
@@ -79,6 +86,30 @@ class GCloudStorageTool(object):
         else:
             self._blob = self.bucket.blob(self.subfolder + self.filename)
         return self._blob
+
+    @blob.setter
+    def blob(self, blob_name):
+        self.subfolder, self.filename = os.path.split(blob_name)
+        self._blob = self.bucket.blob(self.subfolder + self.filename)
+
+    @property
+    def uri(self):
+        if self.blob is None:
+            self._uri = f"gs://{self.bucket_name}/{self.subfolder}"
+        else:
+            self._uri = f"gs://{self.bucket_name}/{self.blob.name}"
+        return self._uri
+
+    @uri.setter
+    def uri(self, uri):
+        if uri[:-1] != "/":
+            partial_uri, self.filename = os.path.split(uri)
+            self.bucket_name, self.subfolder = parse_remote_uri(partial_uri, "gs")
+        else:
+            self.filename = None
+            self.bucket_name, self.subfolder = parse_remote_uri(uri, "gs")
+
+        self._uri = uri
 
     def set_bucket(self, bucket):
         self.bucket_name = bucket
@@ -92,21 +123,6 @@ class GCloudStorageTool(object):
 
     def select_file(self, filename):
         self.filename = filename
-
-    def set_by_path(self, gs_path):
-        if gs_path[:-1] != "/":
-            partial_gs_path, self.filename = os.path.split(gs_path)
-            self.bucket_name, self.subfolder = parse_remote_uri(partial_gs_path, "gs")
-
-        else:
-            self.filename = None
-            self.bucket_name, self.subfolder = parse_remote_uri(gs_path, "gs")
-
-    def get_gs_path(self):
-        if self.blob is None:
-            return f"gs://{self.bucket_name}/{self.subfolder}"
-        else:
-            return f"gs://{self.bucket_name}/{self.blob.name}"
 
     def list_all_buckets(self):
         """Returns a list of all Buckets in Google Cloud Storage"""
@@ -212,17 +228,25 @@ class GCloudStorageTool(object):
 
             return contents
 
-    def rename_file(self, new_filename, old_filename):
-        """Rename only filename from path key, so the final result is similar to rename a file."""
+    def rename_file(self, new_filename):
+        """Rename only last part of key path, so the final result is similar to rename a file."""
 
-        # Still in development
-        raise NotImplementedError
+        if self.filename is None:
+            raise ValueError("No filename set. Use the select_file method to do so first.")
+
+        self.bucket.rename_blob(self.blob, self.subfolder + new_filename)
 
     def rename_subfolder(self, new_subfolder):
-        """Renames all keys, so the final result is similar to rename a subfolder."""
+        """Renames all keys that match the current set subfolder,
+        so the final result is similar to rename a subfolder."""
 
-        # Still in development
-        raise NotImplementedError
+        blobs_to_rename = self.client.list_blobs(self.bucket_name, prefix=self.subfolder)
+
+        for blob in blobs_to_rename:
+            filename = blob.name.replace(self.subfolder, "")
+            self.bucket.rename_blob(blob, new_subfolder + filename)
+
+        self.subfolder = new_subfolder
 
     def upload_file(self, filename, remote_path=None):
         """Uploads file to remote path in Google Cloud Storage (GS).
@@ -260,8 +284,33 @@ class GCloudStorageTool(object):
         Keeps folder structure as prefix in Google Cloud Storage.
         Behaves as if it was downloading an entire folder to current path."""
 
-        # Still in development
-        raise NotImplementedError
+        current_path = os.getcwd()
+        try:
+            os.chdir(folder_path)
+            new_root = os.getcwd()
+
+            # Getting only folder name
+            folder_path = folder_path.replace("\\", "/")
+            folder_path = folder_path + "/" if folder_path[-1] != "/" else folder_path
+            upload_folder = folder_path.split[-2]
+
+            print('Uploading local folder {} to gs://{}/{}\n'.format(folder_path, self.bucket_name, self.subfolder + upload_folder))
+
+            for root, dirs, files in os.walk():
+                for file in files:
+                    local_filename = root + file
+                    remote_path = self.subfolder + upload_folder + root.replace(new_root, "").replace("\\", "/") + file
+
+                    blob = self.bucket.blob(remote_path)
+                    print('Uploading file {} to gs://{}/{}'.format(local_filename, self.bucket_name, remote_path))
+
+                    blob.upload_from_filename(local_filename)
+        except Exception as e:
+            raise e
+        else:
+            print('\nFinished uploading local folder {} to gs://{}/{}'.format(folder_path, self.bucket_name, self.subfolder + upload_folder))
+        finally:
+            os.chdir(current_path)
 
     def upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, **kwargs):
         """Uploads a dataframe directly to a file in the file_format given without having to save the file.
@@ -343,12 +392,39 @@ class GCloudStorageTool(object):
         blob.download_to_filename(local_filename)
         logger.info("File downloaded successfully")
 
-    def download_subfolder(self):
-        """Downloads remote Storage files in currently set enviroment (bucket and subfolder).
-        Behaves as if it was downloading an entire folder to current path."""
+    def download_subfolder(self, download_to=None):
+        """Downloads remote Storage files in currently set enviroment (bucket and subfolder)
+        to current (or defined in download_to parameter) location.
 
-        # Still in development
-        raise NotImplementedError
+        Behaves as if it was downloading an entire folder to current path.
+        """
+
+        if self.subfolder == "":
+            from datetime import datetime
+            encoded_datetime = str(datetime.now()).replace(" ", "T").replace(":", "h", 1).replace(":", "m").split(".")[0]
+            download_dir = self.bucket_name + "_" + encoded_datetime
+        else:
+            download_dir = self.subfolder.split("/")[-2]
+
+        # Setting to absolute location if provided
+        if download_to is not None:
+            download_dir = os.path.join(download_to, download_dir)
+
+        blobs_to_download = self.client.list_blobs(self.bucket_name, prefix=self.subfolder)
+        os.makedirs(download_dir, exist_ok=True)
+
+        print("Downloading files...")
+        for blob in blobs_to_download:
+            # Creating local folder structure
+            *folders, filename = blob.replace(self.subfolder, "", 1).split("/")
+            local_folder = os.path.join(download_dir, *folders)
+            os.makedirs(local_folder, exist_ok=True)
+
+            # Setting download location
+            local_filename = os.path.join(local_folder, filename)
+
+            print(f"Downloading remote file gs://{self.bucket_name}/{blob.name} to {local_filename}")
+            blob.download_to_filename(local_filename)
 
     def download_on_dataframe(self, **kwargs):
         """Use currently file set information to download file and use it directly on a Pandas DataFrame
@@ -362,8 +438,8 @@ class GCloudStorageTool(object):
         if self.blob is None:
             raise ValueError("No file selected. Set it with select_file method first.")
 
-        logger.debug(f"gs path: {self.get_gs_path()}")
-        return pd.read_csv(self.get_gs_path(), **kwargs)
+        logger.debug(f"gs path: {self.uri}")
+        return pd.read_csv(self.uri, **kwargs)
 
     def download_as_string(self, remote_filename=None, encoding="UTF-8"):
         """Downloads a remote object directly into a Python string, avoiding it to have to be saved."""
@@ -378,13 +454,22 @@ class GCloudStorageTool(object):
         return blob.download_as_string().decode(encoding)
 
     def delete_file(self):
-        """Deletes file in Google Cloud Storage."""
+        """Deletes the selected file from Google Cloud Storage."""
 
-        # Still in development
-        raise NotImplementedError
+        if self.filename is None:
+            raise ValueError("No filename set. Use the select_file method to do so first.")
+
+        self.bucket.delete_blob(self.subfolder + self.filename)
+
+        # Resets filename since it doesn't exist anymore
+        self.filename = None
 
     def delete_subfolder(self):
         """Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder."""
 
-        # Still in development
-        raise NotImplementedError
+        blobs_to_delete = self.client.list_blobs(self.bucket_name, prefix=self.subfolder)
+        self.bucket.delete_blobs(blobs_to_delete)
+
+        # Resets subfolder and filename since they don't exist anymore
+        self.subfolder = ""
+        self.filename = None

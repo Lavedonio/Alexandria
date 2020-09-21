@@ -44,16 +44,16 @@ class S3Tool(object):
     since the reason for this to exists is to make the programmers interactions with S3
     easier to write and the code easier to read."""
 
-    def __init__(self, bucket=None, subfolder="", s3_path=None):
-        if all(param is not None for param in [bucket, s3_path]):
-            logger.error("Specify either bucket name or full s3 path.")
-            raise ValueError("Specify either bucket name or full s3 path.")
+    def __init__(self, uri=None, bucket=None, subfolder=""):
+        if all(param is not None for param in [bucket, uri]):
+            logger.error("Specify either bucket name or an URI.")
+            raise ValueError("Specify either bucket name or an URI.")
 
-        # If a s3_path is set, it will find the bucket and subfolder.
+        # If a uri is set, it will find the bucket and subfolder.
         # Even if all parameters are set, it will overwrite the given bucket and subfolder parameters.
         # That means it will have a priority over the other parameters.
-        if s3_path is not None:
-            bucket, subfolder = parse_remote_uri(s3_path, "s3")
+        if uri is not None:
+            bucket, subfolder = parse_remote_uri(uri, "s3")
 
         # Getting credentials
         aws_creds = fetch_credentials("AWS")
@@ -86,10 +86,28 @@ class S3Tool(object):
 
     @property
     def bucket(self):
-        return self.s3.Bucket(self.bucket_name)
+        self._bucket = self.s3.Bucket(self.bucket_name)
+        return self._bucket
+
+    @bucket.setter
+    def bucket(self, bucket_name):
+        self.bucket_name = bucket_name
+        self.subfolder = ""  # Resets subfolder
+        self._bucket = self.s3.Bucket(self.bucket_name)
+
+    @property
+    def uri(self):
+        self._uri = f"s3://{self.bucket_name}/{self.subfolder}"
+        return self._uri
+
+    @uri.setter
+    def uri(self, uri):
+        self.bucket_name, self.subfolder = parse_remote_uri(uri, "s3")
+        self._uri = uri
 
     def set_bucket(self, bucket):
         self.bucket_name = bucket
+        self.subfolder = ""  # Resets subfolder
 
     def set_subfolder(self, subfolder):
         # Clean subfolder into something it will not crash a method later
@@ -98,13 +116,7 @@ class S3Tool(object):
 
         self.subfolder = subfolder
 
-    def set_by_path(self, s3_path):
-        self.bucket_name, self.subfolder = parse_remote_uri(s3_path, "s3")
-
-    def get_s3_path(self):
-        return f"s3://{self.bucket_name}/{self.subfolder}"
-
-    def rename_file(self, new_filename, old_filename):
+    def rename_file(self, old_filename, new_filename):
         """Rename only filename from path key, so the final result is similar to rename a file."""
 
         old_key = self.subfolder + old_filename
@@ -205,7 +217,7 @@ class S3Tool(object):
     def upload_file(self, filename, remote_path=None):
         """Uploads file to remote path in S3.
 
-        remote_path can take either a full S3 path or a subfolder only one.
+        remote_path can take either a full URI or a subfolder only one.
 
         If the remote_path parameter is not set, it will default to whatever subfolder
         is set in instance of the class plus the file name that is being uploaded."""
@@ -213,7 +225,7 @@ class S3Tool(object):
         if remote_path is None:
             remote_path = self.subfolder + os.path.basename(filename)
         else:
-            # Tries to parse as a S3 path. If it fails, ignores this part
+            # Tries to parse as an URI. If it fails, ignores this part
             # and doesn't change the value of remote_path parameter
             try:
                 bucket, subfolder = parse_remote_uri(remote_path, "s3")
@@ -236,15 +248,39 @@ class S3Tool(object):
 
     def upload_subfolder(self, folder_path):
         """Uploads a local folder to with prefix as currently set enviroment (bucket and subfolder).
-        Keeps folder structure as prefix in S3. Behaves as if it was downloading an entire folder to current path."""
+        Keeps folder structure as prefix in S3.
+        Behaves as if it was downloading an entire folder to current path."""
 
-        # Still in development
-        raise NotImplementedError
+        current_path = os.getcwd()
+        try:
+            os.chdir(folder_path)
+            new_root = os.getcwd()
+
+            # Getting only folder name
+            folder_path = folder_path.replace("\\", "/")
+            folder_path = folder_path + "/" if folder_path[-1] != "/" else folder_path
+            upload_folder = folder_path.split[-2]
+
+            print('Uploading local folder {} to s3://{}/{}\n'.format(folder_path, self.bucket_name, self.subfolder + upload_folder))
+
+            for root, dirs, files in os.walk():
+                for file in files:
+                    local_filename = root + file
+                    remote_path = self.subfolder + upload_folder + root.replace(new_root, "").replace("\\", "/") + file
+
+                    print('Uploading file {} to s3://{}/{}'.format(local_filename, self.bucket_name, remote_path))
+                    self.bucket.upload_file(local_filename, remote_path)
+        except Exception as e:
+            raise e
+        else:
+            print('\nFinished uploading local folder {} to s3://{}/{}'.format(folder_path, self.bucket_name, self.subfolder + upload_folder))
+        finally:
+            os.chdir(current_path)
 
     def download_file(self, remote_path, filename=None):
         """Downloads remote S3 file to local path.
 
-        remote_path can take either a full S3 path or a subfolder only one.
+        remote_path can take either a full URI or a subfolder only one.
 
         If the filename parameter is not set, it will default to whatever subfolder
         is set in instance of the class plus the file name that is being downloaded."""
@@ -252,7 +288,7 @@ class S3Tool(object):
         if filename is None:
             filename = self.subfolder + os.path.basename(remote_path)
 
-        # Tries to parse as a S3 path. If it fails, ignores this part
+        # Tries to parse as an URI. If it fails, ignores this part
         # and doesn't change the value of remote_path parameter
         try:
             bucket, subfolder = parse_remote_uri(remote_path, "s3")
@@ -285,12 +321,39 @@ class S3Tool(object):
         os.makedirs(path, exist_ok=True)
         os.replace(filename, os.path.join(path, filename))
 
-    def download_subfolder(self):
-        """Downloads remote S3 files in currently set enviroment (bucket and subfolder).
-        Behaves as if it was downloading an entire folder to current path."""
+    def download_subfolder(self, download_to=None):
+        """Downloads remote S3 files in currently set enviroment (bucket and subfolder)
+        to current (or defined in download_to parameter) location.
 
-        # Still in development
-        raise NotImplementedError
+        Behaves as if it was downloading an entire folder to current path.
+        """
+
+        if self.subfolder == "":
+            from datetime import datetime
+            encoded_datetime = str(datetime.now()).replace(" ", "T").replace(":", "h", 1).replace(":", "m").split(".")[0]
+            download_dir = self.bucket_name + "_" + encoded_datetime
+        else:
+            download_dir = self.subfolder.split("/")[-2]
+
+        # Setting to absolute location if provided
+        if download_to is not None:
+            download_dir = os.path.join(download_to, download_dir)
+
+        files_to_download = self.list_contents()
+        os.makedirs(download_dir, exist_ok=True)
+
+        print("Downloading files...")
+        for remote_filename in files_to_download:
+            # Creating local folder structure
+            *folders, filename = remote_filename.replace(self.subfolder, "", 1).split("/")
+            local_folder = os.path.join(download_dir, *folders)
+            os.makedirs(local_folder, exist_ok=True)
+
+            # Setting download location
+            local_filename = os.path.join(local_folder, filename)
+
+            print(f"Downloading remote file s3://{self.bucket_name}/{remote_filename} to {local_filename}")
+            self.bucket.download_file(remote_filename, local_filename)
 
     def delete_file(self, filename, fail_silently=False):
         """Deletes file. Raises an error if file doesn't exist and fail_silently parameter is set to False."""

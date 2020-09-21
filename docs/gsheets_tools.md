@@ -8,7 +8,7 @@ This is the documentation for the gsheets_tools module and all its contents, wit
   - [set_spreadsheet_by_key(self, sheet_key)](#set_spreadsheet_by_keyself-sheet_key)
   - [set_worksheet_by_id(self, sheet_gid)](#set_worksheet_by_idself-sheet_gid)
   - [download(self)](#downloadself)
-  - [upload(self, dataframe, write_mode="TRUNCATE")](#uploadself-dataframe-write_modetruncate) _(Not Yet Implemented)_
+  - [upload(self, dataframe, write_mode="APPEND", force_upload=False)](#uploadself-dataframe-write_modeappend-force_uploadfalse)
 
 # Module Contents
 ## GSheetsTool
@@ -99,5 +99,29 @@ sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="2140620
 df = sheet.download()
 ```
 
-### upload(self, dataframe, write_mode="TRUNCATE")
-Not implemented.
+### upload(self, dataframe, write_mode="APPEND", force_upload=False)
+Upload the Pandas DataFrame to the selected worksheet. Raises an error if no worksheet is set.
+
+The write_mode parameter determines how the data will be written and can be one of 3 choices:
+- APPEND: will append the data to what's written in the worksheet;
+- EMPTY: writes data only if there's not data in the wroksheet or if there's just the headers;
+- TRUNCATE: removes any current data and uploads what's in the DataFrame.
+
+If the force_upload parameter is set to True, it won't validade if the combination of what's in the worksheet and what's in the DataFrame fits.
+
+Usage example:
+```
+import pandas as pd
+from instackup.gsheets_tools import GSheetsTool
+
+
+data_dict = {
+    'first_col': pd.Series([1, 2, 3]),
+    'second_col': pd.Series([1, 2, 3, 4])
+}
+df = pd.DataFrame(data_dict)
+
+
+sheet = GSheetsTool(sheet_key="0B7ciWr8lX8LTMVVyajlScU42OU0", sheet_gid="214062020")
+df = sheet.upload(df, write_mode="TRUNCATE")
+```
