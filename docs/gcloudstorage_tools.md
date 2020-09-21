@@ -3,38 +3,37 @@ This is the documentation for the gcloudstorage_tools module and all its content
 
 # Index
 - [GCloudStorageTool](#gcloudstoragetool)
-  - [\_\_init\_\_(self, gs_path=None, bucket=None, subfolder="", filename=None, authenticate=True)](#__init__self-gs_pathnone-bucketnone-subfolder-filenamenone-authenticatetrue)
+  - [\_\_init\_\_(self, uri=None, bucket=None, subfolder="", filename=None, authenticate=True)](#__init__self-urinone-bucketnone-subfolder-filenamenone-authenticatetrue)
   - [bucket(self) @property](#bucketself-property)
   - [blob(self) @property](#blobself-property)
+  - [uri(self) @property](#uriself-property)
   - [set_bucket(self, bucket)](#set_bucketself-bucket)
   - [set_subfolder(self, subfolder)](#set_subfolderself-subfolder)
   - [select_file(self, filename)](#select_fileself-filename)
-  - [set_by_path(self, gs_path)](#set_by_pathself-gs_path)
-  - [get_gs_path(self)](#get_gs_pathself)
   - [list_all_buckets(self)](#list_all_bucketsself)
   - [get_bucket_info(self, bucket=None)](#get_bucket_infoself-bucketnone)
   - [get_file_info(self, filename=None, info=None)](#get_file_infoself-filenamenone-infonone)
   - [list_contents(self, yield_results=False)](#list_contentsself-yield_resultsfalse)
-  - [rename_file(self, new_filename, old_filename)](#rename_fileself-new_filename-old_filename) _(Not Yet Implemented)_
-  - [rename_subfolder(self, new_subfolder)](#rename_subfolderself-new_subfolder) _(Not Yet Implemented)_
+  - [rename_file(self, new_filename)](#rename_fileself-new_filename)
+  - [rename_subfolder(self, new_subfolder)](#rename_subfolderself-new_subfolder)
   - [upload_file(self, filename, remote_path=None)](#upload_fileself-filename-remote_pathnone)
-  - [upload_subfolder(self, folder_path)](#upload_subfolderself-folder_path) _(Not Yet Implemented)_
+  - [upload_subfolder(self, folder_path)](#upload_subfolderself-folder_path)
   - [upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, \*\*kwargs)](#upload_from_dataframeself-dataframe-file_formatcsv-filenamenone-overwritefalse-kwargs)
   - [download_file(self, download_to=None, remote_filename=None, replace=False)](#download_fileself-download_tonone-remote_filenamenone-replacefalse)
-  - [download_subfolder(self)](#download_subfolderself) _(Not Yet Implemented)_
+  - [download_subfolder(self, download_to=None)](#download_subfolderself-download_tonone)
   - [download_on_dataframe(self, \*\*kwargs)](#download_on_dataframeself-kwargs)
   - [download_as_string(self, remote_filename=None, encoding="UTF-8")](#download_as_stringself-remote_filenamenone-encodingutf-8)
-  - [delete_file(self)](#delete_fileself) _(Not Yet Implemented)_
-  - [delete_subfolder(self)](#delete_subfolderself) _(Not Yet Implemented)_
+  - [delete_file(self)](#delete_fileself)
+  - [delete_subfolder(self)](#delete_subfolderself)
 
 # Module Contents
 ## GCloudStorageTool
 This class handle most of the interaction needed with Google Cloud Storage, so the base code becomes more readable and straightforward.
 
-### \_\_init\_\_(self, gs_path=None, bucket=None, subfolder="", filename=None, authenticate=True)
-Takes a either _gs_path_ or _bucket_ name (and if necessary also _subfolder_ name and _file name_) as parameters to set the current working directory. It also opens a connection with Google Cloud Storage.
+### \_\_init\_\_(self, uri=None, bucket=None, subfolder="", filename=None, authenticate=True)
+Takes a either _uri_ or _bucket_ name (and if necessary also _subfolder_ name and _file name_) as parameters to set the current working directory. It also opens a connection with Google Cloud Storage.
 
-When setting by the _gs_path_, it will consider that a filename was given if the path doesn't end with a slash, i.e. `/`. If it does, it will consider that the path only has bucket and subfolder arguments. In this implementation, a subfolder **always** end with a slash (`/`).
+When setting by the _uri_, it will consider that a filename was given if the path doesn't end with a slash, i.e. `/`. If it does, it will consider that the path only has bucket and subfolder arguments. In this implementation, a subfolder **always** end with a slash (`/`).
 
 The paradigm of this class is that all the operations are done in the current working directory, so it is important to set the right path (you can reset it later, but still).
 
@@ -47,23 +46,68 @@ from instackup.gcloudstorage_tools import GCloudStorageTool
 
 # With a filename
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/example.txt")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/example.txt")
 # or
 gs = GCloudStorageTool(bucket="some_bucket", subfolder="subfolder/", filename="example.txt")
 
 
 # Without a filename
 
-gs = GCloudStorageTool(gs_path="gs://some_other_bucket/some_subfolder/subpath/")
+gs = GCloudStorageTool(uri="gs://some_other_bucket/some_subfolder/subpath/")
 # or
 gs = GCloudStorageTool(bucket="some_other_bucket", subfolder="some_subfolder/subpath/")
 ```
 
 ### bucket(self) @property
-Returns the bucket object from the client based on the bucket name given in \_\_init\_\_ or set_bucket.
+Returns the bucket object from the client based on the _bucket_name_ attribute. Can be set directly or with \_\_init\_\_ or set_bucket methods.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/file.csv")
+
+# Set a bucket directly
+gs.bucket = "some_other_bucket"
+
+# Use the bucket object as needed
+gs.bucket.blob("subfolder/file.csv").download_to_filename()
+```
 
 ### blob(self) @property
-Returns the blob object from the client based on the _filename_ given in \_\_init\_\_ or select_file. If no _filename_ was given in \_\_init\_\_, returns None.
+Returns the blob object from the client based on the _subfolder_ and _filename_ attributes. Can be set directly or with \_\_init\_\_ or select_file methods. If no _filename_ was given in \_\_init\_\_, returns None.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket")
+
+# Set a blob directly
+gs.blob = "subfolder/file.csv"
+
+# Use the blob object as needed
+gs.blob.download_to_filename()
+```
+
+### uri(self) @property
+Returns a string containing the URI for the currently set bucket, subfolder and filename. Can be set directly or with \_\_init\_\_ method.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket")
+
+# Set a uri directly
+gs.uri = "gs://some_other_bucket/subfolder/file.csv"
+
+# Use the uri as needed
+print(gs.uri)
+```
 
 ### set_bucket(self, bucket)
 Takes a string as a parameter to reset the _bucket_ name and bucket object. It has no return value.
@@ -77,13 +121,13 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/file.csv")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/file.csv")
 
 # Note that it'll reset the subfolder and filename
 gs.set_bucket("some_other_bucket")
 
 # Check new path structure
-print(gs.get_gs_path())
+print(gs.uri)
 
 # output: gs://some_other_bucket/
 ```
@@ -100,13 +144,13 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/file.csv")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/file.csv")
 
 # Note that it'll reset the filename
 gs.set_subfolder("some/more_complex/subfolder/structure/")
 
 # Check new path structure
-print(gs.get_gs_path())
+print(gs.uri)
 
 # output: gs://some_bucket/some/more_complex/subfolder/structure/
 ```
@@ -121,49 +165,14 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
 
 gs.select_file("file.csv")
 
 # Check new path structure
-print(gs.get_gs_path())
+print(gs.uri)
 
 # output: gs://some_bucket/subfolder/file.csv
-```
-
-### set_by_path(self, gs_path)
-Takes a string as the parameter to reset the bucket name, subfolder name and filename by its GS path. It has no return value.
-
-**Warning:** this method doesn't check whether the given path actually exists or not. This operation may not fail, but other methods and properties might do if the gs path doesn't exist.
-
-Usage Example:
-```
-from instackup.gcloudstorage_tools import GCloudStorageTool
-
-
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
-
-gs.set_by_path("gs://some_other_bucket/some/more_complex/subfolder/structure/")
-
-# Check new path structure
-print(gs.get_gs_path())
-
-# output: gs://some_other_bucket/some/more_complex/subfolder/structure/
-```
-
-### get_gs_path(self)
-Returns a string containing the GS path for the currently set bucket and subfolder. It takes no parameter.
-
-Usage Example:
-```
-from instackup.gcloudstorage_tools import GCloudStorageTool
-
-
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
-
-print(gs.get_gs_path())
-
-# output: gs://some_bucket/subfolder/
 ```
 
 ### list_all_buckets(self)
@@ -247,7 +256,7 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
 
 path_contents = gs.list_contents()
 
@@ -262,11 +271,39 @@ if len(path_contents) == 0:
 # some code here
 ```
 
-### rename_file(self, new_filename, old_filename)
-Not implemented.
+### rename_file(self, new_filename)
+Rename only last part of key path, so the final result is similar to rename a file.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/old_filename.json")
+
+# Renames "old_filename.json" to "new_filename.json"
+gs.rename_file("new_filename.json")
+
+print(gs.uri)
+# output: gs://some_bucket/subfolder/new_filename.json
+```
 
 ### rename_subfolder(self, new_subfolder)
-Not implemented.
+Renames all keys that match the current set subfolder, so the final result is similar to rename a subfolder.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket", subfolder="a_generic_subfolder/", filename="filename.json")
+
+# Renames subfolder from "a_generic_subfolder/" to "another_generic_subfolder/" and resets the filename.
+gs.rename_subfolder("another_generic_subfolder")
+
+print(gs.uri)
+# output: gs://some_bucket/another_generic_subfolder/filename.json
+```
 
 ### upload_file(self, filename, remote_path=None)
 Uploads file to remote path in Google Cloud Storage (GS).
@@ -282,7 +319,7 @@ from instackup.gcloudstorage_tools import GCloudStorageTool
 
 file_location = "C:\\Users\\USER\\Desktop\\file.csv"
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
 
 # upload_file method accepts all 3 options
 gs.upload_file(file_location)
@@ -291,7 +328,24 @@ gs.upload_file(file_location, "another_subfolder/")  # Just subfolder
 ```
 
 ### upload_subfolder(self, folder_path)
-Not implemented.
+Uploads a local folder to with prefix as currently set enviroment (bucket and subfolder).
+
+Keeps folder structure as prefix in Google Cloud Storage.
+
+Behaves as if it was downloading an entire folder to current path.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+folder = "C:\\Users\\USER\\Documents\\some_folder"
+
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
+
+gs.upload_subfolder(folder)
+# folder contents will be in URI "gs://some_bucket/subfolder/some_folder"
+```
 
 ### upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, \*\*kwargs)
 Uploads a _dataframe_ directly to a file in the _file_format_ given without having to save the file. If no _filename_ is given, it uses the one set in the blob and will fail if _overwrite_ is set to False.
@@ -314,14 +368,14 @@ from instackup.gcloudstorage_tools import GCloudStorageTool
 
 df = pd.read_csv("C:\\Users\\USER\\Desktop\\file.csv")
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
 
 
 gs.upload_from_dataframe(df, file_format="JSON", filename="file.json")
 
 # or
 
-gs.set_blob("gs://some_bucket/subfolder/file.csv")
+gs.uri = "gs://some_bucket/subfolder/file.csv"
 gs.upload_from_dataframe(df, overwrite=True)
 ```
 
@@ -341,15 +395,29 @@ from instackup.gcloudstorage_tools import GCloudStorageTool
 
 file_location = "gs://some_bucket/other_subfolder/file.csv"
 
-gs = GCloudStorageTool(gs_path=file_location)
+gs = GCloudStorageTool(uri=file_location)
 
 # download_file method accepts both options
 gs.download_file(download_to="C:\\Users\\USER\\Desktop\\file.csv", remote_filename=file_location)
 gs.download_file(download_to="C:\\Users\\USER\\Desktop\\file.csv", replace=True)
 ```
 
-### download_subfolder(self)
-Not implemented.
+### download_subfolder(self, download_to=None)
+Downloads remote Storage files in currently set enviroment (bucket and subfolder) to current (or defined in download_to parameter) location.
+
+Behaves as if it was downloading an entire folder to current path.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+desired_location = "C:\\Users\\USER\\Desktop\\downloaded_files"
+
+gs = GCloudStorageTool(bucket="some_bucket", subfolder="some_subfolder/")
+
+gs.download_subfolder(download_to=desired_location)
+```
 
 ### download_on_dataframe(self, \*\*kwargs)
 Use currently file set information to download file and use it directly on a Pandas DataFrame without having to save the file.
@@ -364,7 +432,7 @@ Usage Example:
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
 
 # For a well behaved file, you may just use the method directly
 gs.select_file("file.csv")
@@ -384,7 +452,7 @@ import json
 from instackup.gcloudstorage_tools import GCloudStorageTool
 
 
-gs = GCloudStorageTool(gs_path="gs://some_bucket/subfolder/")
+gs = GCloudStorageTool(uri="gs://some_bucket/subfolder/")
 gs.select_file("file.json")
 
 # Getting the file in a string format
@@ -395,7 +463,35 @@ py_dict = json.loads(file_string)
 ```
 
 ### delete_file(self)
-Not implemented.
+Deletes the selected file from Google Cloud Storage.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket", subfolder="some/subfolder/structure/", filename="file.csv")
+
+# Delete file and reset filename
+gs.delete_file()
+
+print(gs.uri)
+# output: gs://some_bucket/some/subfolder/structure/
+```
 
 ### delete_subfolder(self)
-Not implemented.
+Deletes all files with subfolder prefix, so the final result is similar to deleting a subfolder.
+
+Usage Example:
+```
+from instackup.gcloudstorage_tools import GCloudStorageTool
+
+
+gs = GCloudStorageTool(bucket="some_bucket", subfolder="some/subfolder/structure/")
+
+# Delete subfolder and reset filename and subfolder name
+gs.delete_subfolder()
+
+print(gs.uri)
+# output: gs://some_bucket/
+```
