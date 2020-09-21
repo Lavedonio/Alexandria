@@ -10,7 +10,7 @@ This Python library is an open source way to standardize and simplify connection
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.1.2 (beta)**
+**Version 0.2.0 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -133,29 +133,28 @@ Check the documentation by clicking in each topic.
     - [start_transfer(self, project_path=None, project_name=None, transfer_name=None)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#start_transferself-project_pathnone-project_namenone-transfer_namenone)
 - [gcloudstorage_tools](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#gcloudstorage_tools)
   - [GCloudStorageTool](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#gcloudstoragetool)
-    - [\_\_init\_\_(self, gs_path=None, bucket=None, subfolder="", filename=None, authenticate=True)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#__init__self-gs_pathnone-bucketnone-subfolder-filenamenone-authenticatetrue)
+    - [\_\_init\_\_(self, uri=None, bucket=None, subfolder="", filename=None, authenticate=True)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#__init__self-urinone-bucketnone-subfolder-filenamenone-authenticatetrue)
     - [bucket(self) @property](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#bucketself-property)
     - [blob(self) @property](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#blobself-property)
+    - [uri(self) @property](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#uriself-property)
     - [set_bucket(self, bucket)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#set_bucketself-bucket)
     - [set_subfolder(self, subfolder)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#set_subfolderself-subfolder)
     - [select_file(self, filename)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#select_fileself-filename)
-    - [set_by_path(self, gs_path)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#set_by_pathself-gs_path)
-    - [get_gs_path(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#get_gs_pathself)
     - [list_all_buckets(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#list_all_bucketsself)
     - [get_bucket_info(self, bucket=None)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#get_bucket_infoself-bucketnone)
     - [get_file_info(self, filename=None, info=None)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#get_file_infoself-filenamenone-infonone)
     - [list_contents(self, yield_results=False)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#list_contentsself-yield_resultsfalse)
-    - [rename_file(self, new_filename, old_filename)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#rename_fileself-new_filename-old_filename) _(Not Yet Implemented)_
-    - [rename_subfolder(self, new_subfolder)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#rename_subfolderself-new_subfolder) _(Not Yet Implemented)_
+    - [rename_file(self, new_filename)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#rename_fileself-new_filename)
+    - [rename_subfolder(self, new_subfolder)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#rename_subfolderself-new_subfolder)
     - [upload_file(self, filename, remote_path=None)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#upload_fileself-filename-remote_pathnone)
-    - [upload_subfolder(self, folder_path)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#upload_subfolderself-folder_path) _(Not Yet Implemented)_
+    - [upload_subfolder(self, folder_path)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#upload_subfolderself-folder_path)
     - [upload_from_dataframe(self, dataframe, file_format='CSV', filename=None, overwrite=False, \*\*kwargs)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#upload_from_dataframeself-dataframe-file_formatcsv-filenamenone-overwritefalse-kwargs)
     - [download_file(self, download_to=None, remote_filename=None, replace=False)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_fileself-download_tonone-remote_filenamenone-replacefalse)
-    - [download_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_subfolderself) _(Not Yet Implemented)_
+    - [download_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_subfolderself)
     - [download_on_dataframe(self, \*\*kwargs)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_on_dataframeself-kwargs)
     - [download_as_string(self, remote_filename=None, encoding="UTF-8")](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#download_as_stringself-remote_filenamenone-encodingutf-8)
-    - [delete_file(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#delete_fileself) _(Not Yet Implemented)_
-    - [delete_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#delete_subfolderself) _(Not Yet Implemented)_
+    - [delete_file(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#delete_fileself)
+    - [delete_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gcloudstorage_tools.md#delete_subfolderself)
 - [general_tools](https://github.com/Lavedonio/instackup/blob/master/docs/general_tools.md#general_tools)
   - [fetch_credentials(service_name, \*\*kwargs)](https://github.com/Lavedonio/instackup/blob/master/docs/general_tools.md#fetch_credentialsservice_name-kwargs)
   - [code_location()](https://github.com/Lavedonio/instackup/blob/master/docs/general_tools.md#code_location)
@@ -168,7 +167,7 @@ Check the documentation by clicking in each topic.
     - [set_spreadsheet_by_key(self, sheet_key)](https://github.com/Lavedonio/instackup/blob/master/docs/gsheets_tools.md#set_spreadsheet_by_keyself-sheet_key)
     - [set_worksheet_by_id(self, sheet_gid)](https://github.com/Lavedonio/instackup/blob/master/docs/gsheets_tools.md#set_worksheet_by_idself-sheet_gid)
     - [download(self)](https://github.com/Lavedonio/instackup/blob/master/docs/gsheets_tools.md#downloadself)
-    - [upload(self, dataframe, write_mode="TRUNCATE")](https://github.com/Lavedonio/instackup/blob/master/docs/gsheets_tools.md#uploadself-dataframe-write_modetruncate) _(Not Yet Implemented)_
+    - [upload(self, dataframe, write_mode="APPEND", force_upload=False)](https://github.com/Lavedonio/instackup/blob/master/docs/gsheets_tools.md#uploadself-dataframe-write_modeappend-force_uploadfalse)
 - [heroku_tools](https://github.com/Lavedonio/instackup/blob/master/docs/heroku_tools.md#heroku_tools)
   - [HerokuTool](https://github.com/Lavedonio/instackup/blob/master/docs/heroku_tools.md#herokutool)
     - [\_\_init\_\_(self, heroku_path="heroku", app=None, remote=None)](https://github.com/Lavedonio/instackup/blob/master/docs/heroku_tools.md#__init__self-heroku_pathheroku-appnone-remotenone)
@@ -188,20 +187,19 @@ Check the documentation by clicking in each topic.
     - [unload_to_S3(self, redshift_query, s3_path, filename, unload_options="MANIFEST GZIP ALLOWOVERWRITE REGION 'us-east-2'")](https://github.com/Lavedonio/instackup/blob/master/docs/redshift_tools.md#unload_to_s3self-redshift_query-s3_path-filename-unload_optionsmanifest-gzip-allowoverwrite-region-us-east-2)
 - [s3_tools](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#s3_tools)
   - [S3Tool](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#s3tool)
-    - [\_\_init\_\_(self, bucket=None, subfolder="", s3_path=None)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#__init__self-bucketnone-subfolder-s3_pathnone)
+    - [\_\_init\_\_(self, uri=None, bucket=None, subfolder="")](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#__init__self-urinone-bucketnone-subfolder)
     - [bucket(self) @property](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#bucketself-property)
+    - [uri(self) @property](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#uriself-property)
     - [set_bucket(self, bucket)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#set_bucketself-bucket)
     - [set_subfolder(self, subfolder)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#set_subfolderself-subfolder)
-    - [set_by_path(self, s3_path)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#set_by_pathself-s3_path)
-    - [get_s3_path(self)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#get_s3_pathself)
-    - [rename_file(self, new_filename, old_filename)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#rename_fileself-new_filename-old_filename)
+    - [rename_file(self, old_filename, new_filename)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#rename_fileself-old_filename-new_filename)
     - [rename_subfolder(self, new_subfolder)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#rename_subfolderself-new_subfolder)
     - [list_all_buckets(self)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#list_all_bucketsself)
     - [list_contents(self, yield_results=False)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#list_contentsself-yield_resultsfalse)
     - [upload_file(self, filename, remote_path=None)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#upload_fileself-filename-remote_pathnone)
-    - [upload_subfolder(self, folder_path)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#upload_subfolderself-folder_path) _(Not Yet Implemented)_
+    - [upload_subfolder(self, folder_path)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#upload_subfolderself-folder_path)
     - [download_file(self, remote_path, filename=None)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#download_fileself-remote_path-filenamenone)
-    - [download_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#download_subfolderself) _(Not Yet Implemented)_
+    - [download_subfolder(self, download_to=None)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#download_subfolderself-download_tonone)
     - [delete_file(self, filename, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#delete_fileself-filename-fail_silentlyfalse)
     - [delete_subfolder(self)](https://github.com/Lavedonio/instackup/blob/master/docs/s3_tools.md#delete_subfolderself)
 - [sql_tools](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#sql_tools)
@@ -225,7 +223,8 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - Beta releases
-  - [Version 0.1.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.2-beta-current_release.md#version-011-beta) (current release)
+  - [Version 0.2.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.0-beta-current_release.md#version-020-beta) (current release)
+  - [Version 0.1.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.2-beta.md#version-012-beta)
   - [Version 0.1.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.1-beta.md#version-011-beta)
   - [Version 0.1.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.0-beta.md#version-010-beta)
 - Alpha releases
