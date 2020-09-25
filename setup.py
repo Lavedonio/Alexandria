@@ -20,7 +20,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="instackup",
-    version="0.2.0",
+    version="0.2.1",
     author="Daniel Lavedonio de Lima",
     author_email="daniel.lavedonio@gmail.com",
     description="A package to ease interaction with cloud services, DB connections and commonly used functionalities in data analytics.",
@@ -34,11 +34,11 @@ setuptools.setup(
         'google-cloud-bigquery>=1.26.0',
         'google-cloud-bigquery-datatransfer>=1.1.0',
         'google-cloud-storage>=1.18.0',
-        'grpcio==1.31.0',
-        'gcsfs==0.6.2',
+        'grpcio==1.32.0',
+        'gcsfs==0.7.1',
         'gspread==3.6.0',
-        'pandas==1.1.0',
-        'psycopg2-binary==2.8.5',
+        'pandas>=1.1.0',
+        'psycopg2-binary==2.8.6',
     ],
     license="MIT",
     classifiers=[
