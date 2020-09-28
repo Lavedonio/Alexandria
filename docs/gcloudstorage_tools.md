@@ -308,9 +308,11 @@ print(gs.uri)
 ### upload_file(self, filename, remote_path=None)
 Uploads file to remote path in Google Cloud Storage (GS).
 
-_remote_path_ can take either a full GS path or a subfolder only one.
+_remote_path_ can take either a full URI or a subfolder only one.
 
-If the _remote_path_ parameter is not set, it will default to whatever subfolder is set in instance of the class plus the file name that is being uploaded.
+If the _remote_path_ parameter is not set, it will default to one of two options:
+- whatever subfolder plus filename attributes set in instance of the class, if filename attribute is set;
+- whatever subfolder is set in instance of the class file name that is being uploaded, if filename attribute is not set.
 
 Usage Example:
 ```

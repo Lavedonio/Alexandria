@@ -22,7 +22,12 @@ class HerokuTool(object):
     so the base code becomes more readable and straightforward."""
 
     def __init__(self, heroku_path="heroku", app=None, remote=None):
-        p_test = subprocess.run(heroku_path, shell=True, capture_output=True)
+        try:
+            # Python version >= 3.7
+            p_test = subprocess.run(heroku_path, shell=True, capture_output=True)
+        except TypeError:
+            # Python 3.6
+            p_test = subprocess.run(heroku_path, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if p_test.returncode != 0:
             raise EnvironmentError("Heroku CLI not installed or not able to be reached.")
@@ -42,4 +47,12 @@ class HerokuTool(object):
     def execute(self, cmd):
         """Executes a Heroku command via the CLI and returns the output."""
         command = " ".join([self.heroku, cmd, self.app_flag]).strip()
-        return subprocess.run(command, shell=True, capture_output=True)
+
+        try:
+            # Python version >= 3.7
+            output = subprocess.run(command, shell=True, capture_output=True)
+        except TypeError:
+            # Python 3.6
+            output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        return output

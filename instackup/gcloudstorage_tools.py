@@ -251,15 +251,21 @@ class GCloudStorageTool(object):
     def upload_file(self, filename, remote_path=None):
         """Uploads file to remote path in Google Cloud Storage (GS).
 
-        remote_path can take either a full GS path or a subfolder only one.
+        remote_path can take either a full URI or a subfolder only one.
 
-        If the remote_path parameter is not set, it will default to whatever subfolder
-        is set in instance of the class plus the file name that is being uploaded."""
+        If the remote_path parameter is not set, it will default to one of two options:
+        - whatever subfolder plus filename attributes set in instance of the class, if filename attribute is set;
+        - whatever subfolder is set in instance of the class file name that is being uploaded,
+        if filename attribute is not set.
+        """
 
         if remote_path is None:
-            remote_path = self.subfolder + os.path.basename(filename)
+            if self.filename is None:
+                remote_path = self.subfolder + os.path.basename(filename)
+            else:
+                remote_path = self.subfolder + self.filename
         else:
-            # Tries to parse as a GS path. If it fails, ignores this part
+            # Tries to parse as an URI. If it fails, ignores this part
             # and doesn't change the value of remote_path parameter
             try:
                 bucket, blob = parse_remote_uri(remote_path, "gs")
