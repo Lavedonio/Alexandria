@@ -361,7 +361,7 @@ with SQLiteTool() as sl:
 ```
 
 ## MySQLTool
-This class handle most of the interaction needed with PostgreSQL databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read the documentation of the base class for more info.
+This class handle most of the interaction needed with MySQL databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read the documentation of the base class for more info.
 
 This class implements the with statement, so there are 2 ways of using it.
 
@@ -371,7 +371,7 @@ This class implements the with statement, so there are 2 ways of using it.
 from instackup.sql_tools import MySQLTool
 
 with MySQLTool() as my:
-    # use my object to interact with PostgreSQL database
+    # use my object to interact with MySQL database
 ```
 
 **2nd way:**
@@ -383,7 +383,7 @@ my = MySQLTool()
 my.connect()
 
 try:
-    # use my object to interact with PostgreSQL database
+    # use my object to interact with MySQL database
 except Exception as e:
     my.rollback()
     raise e
