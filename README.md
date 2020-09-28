@@ -10,7 +10,7 @@ This Python library is an open source way to standardize and simplify connection
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.2.1 (beta)**
+**Version 0.2.2 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -43,12 +43,14 @@ Use the files [secret_template.yml](https://github.com/Lavedonio/instackup/blob/
 
 Location: local
 
+
 Google:
   secret_filename: file.json
 
 BigQuery:
   project_id:
     project_name: "000000000000"
+
 
 AWS:
   access_key: AWSAWSAWSAWSAWSAWSAWS
@@ -68,6 +70,7 @@ RedShift:
     password: masterpassword
     port: 5439
 
+
 PostgreSQL:
   default:
     dbname: postgres
@@ -75,6 +78,15 @@ PostgreSQL:
     host: localhost
     password:
     port: 5432
+
+
+MySQL:
+  default:
+    dbname: mydb
+    host: localhost
+    user: root
+    password:
+    port: 3306
 ```
 Save this file with `.yml` extension in a folder where you know the path won't be modified, like the Desktop folder (Example: `C:\Users\USER\Desktop\Credentials\secret.yml`).
 
@@ -214,16 +226,20 @@ Check the documentation by clicking in each topic.
   - [SQLiteTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#sqlitetool)
     - [\_\_init\_\_(self, filename=None)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#__init__self-filenamenone)
     - [describe_table(self, table, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#describe_tableself-table-fetch_through_pandastrue-fail_silentlyfalse)
-  - [PostgreSQLTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#postgresqltool)
+  - [MySQLTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#mysqltool)
     - [\_\_init\_\_(self, connection='default')](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#__init__self-connectiondefault)
-    - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse)
+    - [describe_table(self, table, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#describe_tableself-table-fetch_through_pandastrue-fail_silentlyfalse-1)
+  - [PostgreSQLTool](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#postgresqltool)
+    - [\_\_init\_\_(self, connection='default')](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#__init__self-connectiondefault-1)
+    - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse-2)
     - [get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)](https://github.com/Lavedonio/instackup/blob/master/docs/sql_tools.md#get_all_db_infoself-get_json_infotrue-fetch_through_pandastrue-fail_silentlyfalse)
 
 # Version logs
 See what changed in every version.
 
 - Beta releases
-  - [Version 0.2.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.1-beta-current_release.md#version-021-beta) (current release)
+  - [Version 0.2.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.2-beta-current_release.md#version-022-beta) (current release)
+  - [Version 0.2.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.1-beta.md#version-021-beta)
   - [Version 0.2.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.0-beta.md#version-020-beta)
   - [Version 0.1.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.2-beta.md#version-012-beta)
   - [Version 0.1.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.1.1-beta.md#version-011-beta)

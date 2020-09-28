@@ -2,6 +2,7 @@ import os
 import logging
 import sqlite3
 import psycopg2
+import mysql.connector
 import pandas as pd
 from .general_tools import fetch_credentials
 
@@ -25,12 +26,12 @@ class SQLTool(object):
 
     def __init__(self, sql_type, filename=None, connection='default'):
         if sql_type == "SQLite":
-            sql_creds = {}
+            sql_credentials = {}
             if filename is None:
                 filename = ':memory:'
         else:
             # Getting credentials
-            sql_creds = fetch_credentials(service_name=sql_type, connection=connection)
+            sql_credentials = fetch_credentials(service_name=sql_type, connection=connection)
 
         self.sql_type = sql_type
 
@@ -38,11 +39,7 @@ class SQLTool(object):
         self.filename = filename
 
         # PostgreSQL and others
-        self.dbname = sql_creds.get("dbname")
-        self.user = sql_creds.get("user")
-        self.password = sql_creds.get("password")
-        self.host = sql_creds.get("host")
-        self.port = sql_creds.get("port")
+        self.connection_parameters = sql_credentials
 
         # Attibutes ready to be set in connection
         self.connection = None
@@ -58,16 +55,15 @@ class SQLTool(object):
         try:
             if self.sql_type == "SQLite":
                 conn = sqlite3.connect(self.filename)
-            else:
-                conn = psycopg2.connect(
-                    host=self.host,
-                    port=self.port,
-                    user=self.user,
-                    password=self.password,
-                    database=self.dbname
-                )
+
+            elif self.sql_type == "MySQL":
+                conn = mysql.connector.connect(**self.connection_parameters)
+
+            else:  # PostgreSQL
+                conn = psycopg2.connect(**self.connection_parameters)
+
             logger.info("Connected!")
-        except (sqlite3.Error, psycopg2.Error) as e:
+        except (sqlite3.Error, psycopg2.Error, mysql.connector.Error) as e:
             print('Failed to open database connection.')
             logger.exception('Failed to open database connection.')
 
@@ -101,7 +97,7 @@ class SQLTool(object):
             self.cursor.execute(command)
             logger.debug(f"Command Executed: {command}")
 
-        except (sqlite3.Error, psycopg2.Error) as e:
+        except (sqlite3.Error, psycopg2.Error, mysql.connector.Error) as e:
             logger.exception("Error running command!")
 
             if not fail_silently:
@@ -128,7 +124,7 @@ class SQLTool(object):
             try:
                 result = pd.read_sql_query(sql_query, self.connection)
 
-            except (sqlite3.Error, psycopg2.Error, pd.io.sql.DatabaseError) as e:
+            except (sqlite3.Error, psycopg2.Error, mysql.connector.Error, pd.io.sql.DatabaseError) as e:
                 logger.exception("Error running query!")
                 result = None
 
@@ -144,7 +140,7 @@ class SQLTool(object):
 
                 result = self.cursor.fetchall()
 
-            except (sqlite3.Error, psycopg2.Error) as e:
+            except (sqlite3.Error, psycopg2.Error, mysql.connector.Error) as e:
                 logger.exception("Error running query!")
                 result = None
 
@@ -172,7 +168,6 @@ class SQLTool(object):
         else:
             # Exception occurred, so rollback.
             self.rollback()
-            # return False
 
         self.close_connection()
 
@@ -188,6 +183,20 @@ class SQLiteTool(SQLTool):
         """Special query that returns all metadata from a specific table"""
 
         sql_query = f"""SELECT name FROM sqlite_master WHERE type='{table}';"""
+        return self.query(sql_query, fetch_through_pandas=fetch_through_pandas, fail_silently=fail_silently)
+
+
+class MySQLTool(SQLTool):
+    """This class handle most of the interaction needed with MySQL databases,
+    so the base code becomes more readable and straightforward."""
+
+    def __init__(self, connection='default'):
+        super().__init__("MySQL", connection=connection)
+
+    def describe_table(self, table, fetch_through_pandas=True, fail_silently=False):
+        """Returns all metadata from a specific table"""
+
+        sql_query = f"DESCRIBE {table}"
         return self.query(sql_query, fetch_through_pandas=fetch_through_pandas, fail_silently=fail_silently)
 
 

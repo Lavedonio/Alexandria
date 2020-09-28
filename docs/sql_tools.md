@@ -13,9 +13,12 @@ This is the documentation for the sql_tools module and all its contents, with us
 - [SQLiteTool](#sqlitetool)
   - [\_\_init\_\_(self, filename=None)](#__init__self-filenamenone)
   - [describe_table(self, table, fetch_through_pandas=True, fail_silently=False)](#describe_tableself-table-fetch_through_pandastrue-fail_silentlyfalse)
-- [PostgreSQLTool](#postgresqltool)
+- [MySQLTool](#mysqltool)
   - [\_\_init\_\_(self, connection='default')](#__init__self-connectiondefault)
-  - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse)
+  - [describe_table(self, table, fetch_through_pandas=True, fail_silently=False)](#describe_tableself-table-fetch_through_pandastrue-fail_silentlyfalse-1)
+- [PostgreSQLTool](#postgresqltool)
+  - [\_\_init\_\_(self, connection='default')](#__init__self-connectiondefault-1)
+  - [describe_table(self, table, schema="public", fetch_through_pandas=True, fail_silently=False)](#describe_tableself-table-schemapublic-fetch_through_pandastrue-fail_silentlyfalse-2)
   - [get_all_db_info(self, get_json_info=True, fetch_through_pandas=True, fail_silently=False)](#get_all_db_infoself-get_json_infotrue-fetch_through_pandastrue-fail_silentlyfalse)
 
 # Module Contents
@@ -353,6 +356,91 @@ with SQLiteTool() as sl:
     # Returns a Pandas dataframe with all schema info of that specific table
     # To do operations with dataframe, you'll need to import pandas library
     df = sl.describe_table("airflow_logs")
+
+    # other code
+```
+
+## MySQLTool
+This class handle most of the interaction needed with PostgreSQL databases, so the base code becomes more readable and straightforward. This class inherits from [SQLTool](#sqltool), so its attributes and methods can (and will) be accessed from this class. Read the documentation of the base class for more info.
+
+This class implements the with statement, so there are 2 ways of using it.
+
+**1st way:**
+
+```
+from instackup.sql_tools import MySQLTool
+
+with MySQLTool() as my:
+    # use my object to interact with PostgreSQL database
+```
+
+**2nd way:**
+
+```
+from instackup.sql_tools import MySQLTool
+
+my = MySQLTool()
+my.connect()
+
+try:
+    # use my object to interact with PostgreSQL database
+except Exception as e:
+    my.rollback()
+    raise e
+else:
+    my.commit()
+finally:
+    my.close_connection()
+```
+
+Easy to see that it is recommended (and easier) to use the first syntax.
+
+### \_\_init\_\_(self, connection='default')
+Initialization takes _connection_ parameter, that selects which connection to use. It has no return value.
+
+The \_\_init\_\_ method doesn't actually opens the connection, but sets all values required by the connect method.
+
+Usage example:
+```
+from instackup.sql_tools import MySQLTool
+
+my = MySQLTool(connection='default')
+```
+
+### describe_table(self, table, fetch_through_pandas=True, fail_silently=False)
+Returns all metadata from a specific table.
+
+Usage example:
+```
+from instackup.sql_tools import MySQLTool
+
+
+my = MySQLTool()
+my.connect()
+
+try:
+    # Returns a list of tuples containing the rows of the response
+    table = my.describe_table("users", fetch_through_pandas=False, fail_silently=True)
+
+    # Do something with table variable
+
+except Exception as e:
+    my.rollback()
+    raise e
+else:
+    my.commit()
+finally:
+    # remember to close the connection later
+    my.close_connection()
+
+# or
+
+with MySQLTool() as my:
+    # Already connected, use my object in this context
+
+    # Returns a Pandas dataframe with all schema info of that specific schema.table
+    # To do operations with dataframe, you'll need to import pandas library
+    df = my.describe_table("airflow_logs")
 
     # other code
 ```

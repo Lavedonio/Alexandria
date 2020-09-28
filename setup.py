@@ -20,7 +20,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="instackup",
-    version="0.2.1",
+    version="0.2.2",
     author="Daniel Lavedonio de Lima",
     author_email="daniel.lavedonio@gmail.com",
     description="A package to ease interaction with cloud services, DB connections and commonly used functionalities in data analytics.",
@@ -37,6 +37,7 @@ setuptools.setup(
         'grpcio==1.32.0',
         'gcsfs==0.7.1',
         'gspread==3.6.0',
+        'mysql-connector-python>=8.0.21',
         'pandas>=1.1.0',
         'psycopg2-binary==2.8.6',
     ],
