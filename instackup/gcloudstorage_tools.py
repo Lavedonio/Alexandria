@@ -89,7 +89,14 @@ class GCloudStorageTool(object):
 
     @blob.setter
     def blob(self, blob_name):
-        self.subfolder, self.filename = os.path.split(blob_name)
+        subfolder, self.filename = os.path.split(blob_name)
+
+        # Adding trailing slash in subfolder if needed
+        if subfolder != "":
+            self.subfolder = subfolder if subfolder[-1] == "/" else subfolder + "/"
+        else:
+            self.subfolder = subfolder
+
         self._blob = self.bucket.blob(self.subfolder + self.filename)
 
     @property
