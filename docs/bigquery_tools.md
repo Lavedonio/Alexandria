@@ -9,6 +9,9 @@ This is the documentation for the bigquery_tools module and all its contents, wi
   - [query_and_save_results(self, sql_query, dest_dataset, dest_table, writing_mode="TRUNCATE", create_table_if_needed=False)](#query_and_save_resultsself-sql_query-dest_dataset-dest_table-writing_modetruncate-create_table_if_neededfalse)
   - [list_datasets(self)](#list_datasetsself)
   - [create_dataset(self, dataset, location="US")](#create_datasetself-dataset-locationus)
+  - [list_dataset_permissions(self, dataset)](#list_dataset_permissionsself-dataset)
+  - [add_dataset_permission(self, dataset, role, email_type, email)](#add_dataset_permissionself-dataset-role-email_type-email)
+  - [remove_dataset_permission(self, dataset, email)](#remove_dataset_permissionself-dataset-email)
   - [list_tables_in_dataset(self, dataset, get=None, return_type="dict")](#list_tables_in_datasetself-dataset-getnone-return_typedict)
   - [get_table_schema(self, dataset, table)](#get_table_schemaself-dataset-table)
   - [convert_postgresql_table_schema(self, dataframe, parse_json_columns=True)](#convert_postgresql_table_schemaself-dataframe-parse_json_columnstrue)
@@ -113,6 +116,75 @@ from instackup.bigquery_tools import BigQueryTool
 bq = BigQueryTool()
 
 datasets = bq.create_dataset("google_analytics_reports")
+```
+
+### list_dataset_permissions(self, dataset)
+Returns a list with all the permissions of the given dataset.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+dataset = "dataset"  # Enter a valid dataset name
+
+bq = BigQueryTool()
+
+print("Current permissions:")
+print(bq.list_dataset_permissions(dataset))
+```
+
+### add_dataset_permission(self, dataset, role, email_type, email)
+Add a permission to a dataset, given its predefined role, email_type and email.
+
+email_type parameter can be one of the followings:
+- 'domain'
+- 'groupByEmail'
+- 'group' (same as 'groupByEmail')
+- 'iamMember'
+- 'specialGroup'
+- 'userByEmail'
+- 'user' (same as 'userByEmail')
+- 'view'
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+dataset = "dataset"  # Enter a valid dataset name
+email = "some_email_group@company.com"  # Enter a valid email
+email_type = "group"
+role = "READER"
+
+
+bq = BigQueryTool()
+
+bq.add_dataset_permission(dataset, role, email_type, email)
+
+print("New permissions:")
+print(bq.list_dataset_permissions(dataset))
+```
+
+### remove_dataset_permission(self, dataset, email)
+Removes a permission from a dataset, given the currently set email (entity_id).
+Nothing changes if there's no match.
+
+Usage example:
+```
+from instackup.bigquery_tools import BigQueryTool
+
+
+dataset = "dataset"  # Enter a valid dataset name
+email = "someone@company.com"  # Enter a valid email
+
+
+bq = BigQueryTool()
+
+bq.remove_dataset_permission(dataset, email)
+
+print("New permissions:")
+print(bq.list_dataset_permissions(dataset))
 ```
 
 ### list_tables_in_dataset(self, dataset, get=None, return_type="dict")

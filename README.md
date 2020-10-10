@@ -10,7 +10,7 @@ This Python library is an open source way to standardize and simplify connection
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.2.4 (beta)**
+**Version 0.2.5 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -132,6 +132,9 @@ Check the documentation by clicking in each topic.
     - [query_and_save_results(self, sql_query, dest_dataset, dest_table, writing_mode="TRUNCATE", create_table_if_needed=False)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#query_and_save_resultsself-sql_query-dest_dataset-dest_table-writing_modetruncate-create_table_if_neededfalse)
     - [list_datasets(self)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#list_datasetsself)
     - [create_dataset(self, dataset, location="US")](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#create_datasetself-dataset-locationus)
+    - [list_dataset_permissions(self, dataset)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#list_dataset_permissionsself-dataset)
+    - [add_dataset_permission(self, dataset, role, email_type, email)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#add_dataset_permissionself-dataset-role-email_type-email)
+    - [remove_dataset_permission(self, dataset, email)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#remove_dataset_permissionself-dataset-email)
     - [list_tables_in_dataset(self, dataset, get=None, return_type="dict")](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#list_tables_in_datasetself-dataset-getnone-return_typedict)
     - [get_table_schema(self, dataset, table)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#get_table_schemaself-dataset-table)
     - [convert_postgresql_table_schema(self, dataframe, parse_json_columns=True)](https://github.com/Lavedonio/instackup/blob/master/docs/bigquery_tools.md#convert_postgresql_table_schemaself-dataframe-parse_json_columnstrue)
@@ -238,7 +241,8 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - Beta releases
-  - [Version 0.2.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.4-beta-current_release.md#version-024-beta) (current release)
+  - [Version 0.2.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.5-beta-current_release.md#version-025-beta) (current release)
+  - [Version 0.2.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.4-beta.md#version-024-beta)
   - [Version 0.2.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.3-beta.md#version-023-beta)
   - [Version 0.2.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.2-beta.md#version-022-beta)
   - [Version 0.2.1](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.1-beta.md#version-021-beta)

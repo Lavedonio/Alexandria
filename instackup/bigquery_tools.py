@@ -211,6 +211,61 @@ class BigQueryTool(object):
         dataset = self.client.create_dataset(dataset)  # API request
         print("Created dataset {}".format(dataset.full_dataset_id))
 
+    def list_dataset_permissions(self, dataset):
+        """Returns a list with all the permissions of the given dataset."""
+
+        dataset_ref = self.client.get_dataset(dataset)
+        return list(dataset_ref.access_entries)
+
+    def add_dataset_permission(self, dataset, role, email_type, email):
+        """Add a permission to a dataset, given its predefined role, email_type and email.
+
+        email_type parameter can be one of the followings:
+        - 'domain'
+        - 'groupByEmail'
+        - 'group' (same as 'groupByEmail')
+        - 'iamMember'
+        - 'specialGroup'
+        - 'userByEmail'
+        - 'user' (same as 'userByEmail')
+        - 'view'
+        """
+
+        dataset_ref = self.client.get_dataset(dataset)
+        entries = list(dataset_ref.access_entries)
+
+        # Replacing values if needed
+        email_type = "userByEmail" if email_type.lower() == 'user' else email_type
+        email_type = "groupByEmail" if email_type.lower() == 'group' else email_type
+
+        entry = bigquery.AccessEntry(
+            role=role,
+            entity_type=email_type,
+            entity_id=email,
+        )
+
+        entries.append(entry)
+        dataset_ref.access_entries = entries
+
+        # API request
+        dataset_ref = self.client.update_dataset(dataset_ref, ["access_entries"])
+
+    def remove_dataset_permission(self, dataset, email):
+        """Removes a permission from a dataset, given the currently set email (entity_id).
+        Nothing changes if there's no match.
+        """
+
+        dataset_ref = self.client.get_dataset(dataset)
+        entries = list(dataset_ref.access_entries)
+
+        # Remove all matches
+        entries[:] = [entry for entry in entries if entry.entity_id.lower() != email.lower()]
+
+        dataset_ref.access_entries = entries
+
+        # API request
+        dataset_ref = self.client.update_dataset(dataset_ref, ["access_entries"])
+
     def list_tables_in_dataset(self, dataset, get=None, return_type="dict"):
         """Lists all tables inside a dataset. Will fail if dataset doesn't exist.
 
