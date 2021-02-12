@@ -44,7 +44,7 @@ class S3Tool(object):
     since the reason for this to exists is to make the programmers interactions with S3
     easier to write and the code easier to read."""
 
-    def __init__(self, uri=None, bucket=None, subfolder=""):
+    def __init__(self, uri=None, bucket=None, subfolder="", connection="default"):
         if all(param is not None for param in [bucket, uri]):
             logger.error("Specify either bucket name or an URI.")
             raise ValueError("Specify either bucket name or an URI.")
@@ -56,7 +56,7 @@ class S3Tool(object):
             bucket, subfolder = parse_remote_uri(uri, "s3")
 
         # Getting credentials
-        aws_creds = fetch_credentials("AWS")
+        aws_creds = fetch_credentials("AWS", connection)
 
         try:
             s3_resource = boto3.resource("s3")

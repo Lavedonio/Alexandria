@@ -24,7 +24,7 @@ class RedShiftTool(PostgreSQLTool):
     """This class handle most of the interaction needed with RedShift,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, connect_by_cluster=True):
+    def __init__(self, connection="default", connect_by_cluster=True):
         # Code structure based on StackOverFlow answer
         # https://stackoverflow.com/questions/44243169/connect-to-redshift-using-python-using-iam-role
 
@@ -32,8 +32,12 @@ class RedShiftTool(PostgreSQLTool):
         connection_type = "cluster_credentials" if connect_by_cluster else "master_password"
         logger.debug(f"connection_type = {connection_type}")
 
-        redshift_creds = fetch_credentials(service_name="RedShift", connection_type=connection_type)
-        aws_creds = fetch_credentials("AWS")
+        redshift_creds = fetch_credentials(
+            service_name="RedShift",
+            connection=connection,
+            connection_type=connection_type
+        )
+        aws_creds = fetch_credentials("AWS", connection)
 
         # Getting cluster credentials
         if connect_by_cluster:

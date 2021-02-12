@@ -19,7 +19,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-def fetch_credentials(service_name, **kwargs):
+def fetch_credentials(service_name, *args, **kwargs):
     """Gets the credentials from the secret file set in CREDENTIALS_HOME variable and
     returns its selected service, which is defined by the service_name parameter, in a dictionary.
 
@@ -51,12 +51,19 @@ def fetch_credentials(service_name, **kwargs):
         else:
             secrets = yaml.safe_load(stream)
 
-    # Parses only 1 kwarg if it's passed in function call
+    # Parses args and kwargs in the order was passed in the function call
+    # First resolves all args and them the kwargs. Service Name is the first and only required one.
+    return_values = secrets[service_name]
+
+    if bool(args):
+        for arg in args:
+            return_values = return_values[arg]
+
     if bool(kwargs):
-        second_kwarg, *_ = kwargs.values()
-        return secrets[service_name][second_kwarg]
-    else:
-        return secrets[service_name]
+        for kwarg in kwargs.values():
+            return_values = return_values[kwarg]
+
+    return return_values
 
 
 def code_location():

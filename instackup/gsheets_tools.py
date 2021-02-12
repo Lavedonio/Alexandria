@@ -23,7 +23,7 @@ class GSheetsTool(object):
     """This class encapsulates the gspread module to ease the setup process and handle most of the
     interaction needed with Google Sheets, so the base code becomes more readable and straightforward."""
 
-    def __init__(self, sheet_url=None, sheet_key=None, sheet_gid=None, auth_mode='secret_key', read_only=False,
+    def __init__(self, sheet_url=None, sheet_key=None, sheet_gid=None, auth_mode='secret_key', connection="default", read_only=False,
                  scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']):
 
         # >> Convert scopes into readonly if needed
@@ -37,7 +37,7 @@ class GSheetsTool(object):
         # >> Authorizing and initializing client
         if auth_mode.lower() == 'secret_key':
             # Getting credentials
-            google_creds = fetch_credentials("Google")
+            google_creds = fetch_credentials("Google", connection)
             connect_file = google_creds["secret_filename"]
             credentials_path = fetch_credentials("credentials_path")
 

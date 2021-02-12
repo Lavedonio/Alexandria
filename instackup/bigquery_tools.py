@@ -91,20 +91,28 @@ class BigQueryTool(object):
     """This class handle most of the interaction needed with BigQuery,
     so the base code becomes more readable and straightforward."""
 
-    def __init__(self, authenticate=True):
+    def __init__(self, connection="default", authenticate=True):
         # Code created following Google official API documentation:
         # https://cloud.google.com/bigquery/docs/reference/libraries
         # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries?hl=pt-br#bigquery_simple_app_query-python
 
         if authenticate:
             # Getting credentials
-            google_creds = fetch_credentials("Google")
+            google_creds = fetch_credentials("Google", connection)
             connect_file = google_creds["secret_filename"]
             credentials_path = fetch_credentials("credentials_path")
+
+            project = {
+                "id": google_creds["project_id"],
+                "name": google_creds["project_name"],
+                "number": google_creds["project_number"]
+            }
 
             # Sets environment if not yet set
             if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None:
                 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(credentials_path, connect_file)
+        else:
+            project = None
 
         # Initiating client
         logger.debug("Initiating BigQuery Client")
@@ -117,6 +125,7 @@ class BigQueryTool(object):
 
         self.client = bq_client
         self.transfer_client = None
+        self.project = project
 
     def query(self, sql_query):
         """Run a query and return the results as a Pandas Dataframe"""
@@ -814,9 +823,6 @@ class BigQueryTool(object):
         API documentation: https://googleapis.dev/python/bigquerydatatransfer/latest/gapic/v1/api.html
         """
 
-        # Getting dictionary of project names and ids.
-        project_ids = fetch_credentials("BigQuery", dictionary="project_id")
-
         # Initiating client
         if self.transfer_client is None:
             self.transfer_client = bigquery_datatransfer_v1.DataTransferServiceClient()
@@ -825,15 +831,34 @@ class BigQueryTool(object):
         # project_path given.
         if project_path is None:
             # If one of the arguments is missing, this method fails
-            if project_name is None or transfer_name is None:
+            if (project_name is None and self.project is None) or transfer_name is None:
                 logger.exception("Specify either project and transfer names or transferConfig project path.")
                 raise ValueError("Specify either project and transfer names or transferConfig project path.")
 
             else:
-                # Get project id from dictionary
+                # Trying to get project id from current project info
                 try:
-                    project_id = project_ids[project_name]
-                except KeyError:
+                    project_id = self.project["id"]
+                    assert project_name == self.project["name"]
+                except (TypeError, AssertionError):
+                    found_project_id = False
+                else:
+                    found_project_id = True
+
+                # If project name is not the current working one,
+                # checks all the other ones saved in the secrets file.
+                if found_project_id:
+                    pass
+                else:
+                    google_creds = fetch_credentials("Google")
+                    for project_info in google_creds.values():
+                        if project_info["project_name"] == project_name:
+                            project_id = project_info["project_id"]
+                            found_project_id = True
+                            break
+
+                # If it still haven't found, raises an error
+                if not found_project_id:
                     logger.exception("Project name not found in secrets file. Please add in secrets file or use the project_path parameter instead.")
                     raise KeyError("Project name not found in secrets file. Please add in secrets file or use the project_path parameter instead.")
 
