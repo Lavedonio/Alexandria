@@ -34,7 +34,7 @@ setuptools.setup(
         'google-cloud-bigquery>=1.26.0',
         'google-cloud-bigquery-datatransfer>=1.1.0',
         'google-cloud-storage>=1.18.0',
-        'grpcio==1.32.0',
+        'grpcio==1.34.0',
         'gcsfs==0.7.1',
         'gspread==3.6.0',
         'mysql-connector-python>=8.0.21',

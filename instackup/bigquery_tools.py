@@ -745,6 +745,7 @@ class BigQueryTool(object):
         job_config, table_ref = self.__job_preparation_file_upload(
             dataset=dataset, table=table, file_format=file_format,
             header_rows=header_rows, delimiter=delimiter, encoding=encoding,
+            ignore_unknown_values=ignore_unknown_values, max_bad_records=max_bad_records,
             writing_mode=writing_mode, create_table_if_needed=create_table_if_needed, schema=schema
         )
 
@@ -805,6 +806,7 @@ class BigQueryTool(object):
         job_config, table_ref = self.__job_preparation_file_upload(
             dataset=dataset, table=table, file_format=file_format,
             header_rows=header_rows, delimiter=delimiter, encoding=encoding,
+            ignore_unknown_values=ignore_unknown_values, max_bad_records=max_bad_records,
             writing_mode=writing_mode, create_table_if_needed=create_table_if_needed, schema=schema
         )
 

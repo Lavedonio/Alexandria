@@ -244,6 +244,7 @@ See what changed in every version.
 
 - Beta releases
   - [Version 0.3.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.3.0-beta-current_release.md#version-030-beta) (current release)
+  - [Version 0.2.6](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.6-beta.md#version-026-beta)
   - [Version 0.2.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.5-beta.md#version-025-beta)
   - [Version 0.2.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.4-beta.md#version-024-beta)
   - [Version 0.2.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.3-beta.md#version-023-beta)
