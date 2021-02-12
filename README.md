@@ -10,7 +10,7 @@ This Python library is an open source way to standardize and simplify connection
 - [Version logs](#version-logs)
 
 # Current release
-**Version 0.2.5 (beta)**
+**Version 0.3.0 (beta)**
 
 # Prerequisites
 1. Have a [Python 3.6 version or superior](https://www.python.org/downloads/) installed;
@@ -45,30 +45,32 @@ Location: local
 
 
 Google:
-  secret_filename: file.json
-
-BigQuery:
-  project_id:
-    project_name: "000000000000"
+  default:
+    project_id: project_id
+    project_name: project_name
+    project_number: "000000000000"
+    secret_filename: api_key.json
 
 
 AWS:
-  access_key: AWSAWSAWSAWSAWSAWSAWS
-  secret_key: CcasldUYkfsadcSDadskfDSDAsdUYalf
+  default:
+    access_key: AWSAWSAWSAWSAWSAWSAWS
+    secret_key: some_secret_key_value
 
 RedShift:
-  cluster_credentials:
-    dbname: db
-    user: masteruser
-    host: blablabla.random.us-east-2.redshift.amazonaws.com
-    cluster_id: cluster
-    port: 5439
-  master_password:
-    dbname: db
-    user: masteruser
-    host: blablabla.random.us-east-2.redshift.amazonaws.com
-    password: masterpassword
-    port: 5439
+  default:
+    cluster_credentials:
+      dbname: db
+      user: masteruser
+      host: blablabla.random.us-east-2.redshift.amazonaws.com
+      cluster_id: cluster
+      port: 5439
+    master_password:
+      dbname: db
+      user: masteruser
+      host: blablabla.random.us-east-2.redshift.amazonaws.com
+      password: masterpassword
+      port: 5439
 
 
 PostgreSQL:
@@ -76,7 +78,7 @@ PostgreSQL:
     dbname: postgres
     user: postgres
     host: localhost
-    password:
+    password: ""
     port: 5432
 
 
@@ -85,7 +87,7 @@ MySQL:
     dbname: mydb
     host: localhost
     user: root
-    password:
+    password: ""
     port: 3306
 ```
 Save this file with `.yml` extension in a folder where you know the path won't be modified, like the Desktop folder (Example: `C:\Users\USER\Desktop\Credentials\secret.yml`).
@@ -241,7 +243,8 @@ Check the documentation by clicking in each topic.
 See what changed in every version.
 
 - Beta releases
-  - [Version 0.2.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.5-beta-current_release.md#version-025-beta) (current release)
+  - [Version 0.3.0](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.3.0-beta-current_release.md#version-030-beta) (current release)
+  - [Version 0.2.5](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.5-beta.md#version-025-beta)
   - [Version 0.2.4](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.4-beta.md#version-024-beta)
   - [Version 0.2.3](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.3-beta.md#version-023-beta)
   - [Version 0.2.2](https://github.com/Lavedonio/instackup/blob/master/version_logs/v0.2.2-beta.md#version-022-beta)
